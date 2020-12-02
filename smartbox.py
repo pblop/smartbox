@@ -40,6 +40,9 @@ class Session(object):
             raise
         return response.json()
 
+    def get_api_name(self):
+        return self._api_name
+
     def get_devices(self):
         response = self._api_request()
         return response['devs']
