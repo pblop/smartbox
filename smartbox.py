@@ -89,6 +89,8 @@ def get_session(api_name, basic_auth_credentials, username, password):
     token_url = f"https://api-{api_name}.helki.com/client/token"
     response = requests.post(token_url, data=token_data, headers=token_headers)
     r = response.json()
+    if r['token_type'] != 'bearer':
+        raise RuntimeError(f"Unsupported token type {r['token_type']}")
     return Session(api_name, r['access_token'], r['refresh_token'], r['expires_in'])
 
 
