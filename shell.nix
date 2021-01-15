@@ -6,6 +6,7 @@ buildPythonPackage rec {
   src = ".";
   propagatedBuildInputs = [ click
                             flake8
+                            freezegun
                             pytest
                             pyyaml
                             requests

@@ -1,31 +1,59 @@
 import click
+import datetime
 import json
 import logging
 import pprint
 import requests
 
+_MIN_TOKEN_LIFETIME = 60  # Minimum time left before expiry before we refresh (seconds)
+
 
 class Session(object):
-    def __init__(self, api_name, access_token, refresh_token, expires_in):
+    def __init__(self, api_name, basic_auth_credentials, username, password):
         self._api_name = api_name
-        self._access_token = access_token
-        self._refresh_token = refresh_token
-        self._expires_in = expires_in
+        self._basic_auth_credentials = basic_auth_credentials
+        self._auth({'grant_type': 'password', 'username': username, 'password': password})
+
+    def _auth(self, credentials):
+        token_data = '&'.join(f"{k}={v}" for k, v in credentials.items())
+        token_headers = {
+            'authorization': f'Basic {self._basic_auth_credentials}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+
+        token_url = f"https://api-{self._api_name}.helki.com/client/token"
+        response = requests.post(token_url, data=token_data, headers=token_headers)
+        r = response.json()
+        self._access_token = r['access_token']
+        self._refresh_token = r['refresh_token']
+        if r['expires_in'] < _MIN_TOKEN_LIFETIME:
+            logging.warning(
+                f"Token expires in {r['expires_in']}s, which is below minimum lifetime of {_MIN_TOKEN_LIFETIME}s - will refresh again on next operation"
+            )
+        self._expires_at = datetime.datetime.now() + datetime.timedelta(seconds=r['expires_in'])
+        logging.debug(f"Authenticated session ({credentials['grant_type']}), access_token={self._access_token}, expires at {self._expires_at}")
+
+    def _check_refresh(self):
+        if (self._expires_at - datetime.datetime.now()) < datetime.timedelta(seconds=_MIN_TOKEN_LIFETIME):
+            self._auth({'grant_type': 'refresh_token', 'refresh_token': self._refresh_token})
 
     def _get_headers(self):
-        # TODO: token refresh
         return {
             "Authorization": f"Bearer {self._access_token}",
-            "content-type": "application/json",
+            "Content-Type": "application/json",
+            # TODO: generalise
+            "x-serialid": "5",
         }
 
     def _api_request(self, path=""):
+        self._check_refresh()
         api_url = f"https://api-{self._api_name}.helki.com/api/v2/devs{path}"
         response = requests.get(api_url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()
 
     def _api_post(self, data, path=""):
+        self._check_refresh()
         api_url = f"https://api-{self._api_name}.helki.com/api/v2/devs{path}"
         # TODO: json dump
         try:
@@ -42,6 +70,15 @@ class Session(object):
 
     def get_api_name(self):
         return self._api_name
+
+    def get_access_token(self):
+        return self._access_token
+
+    def get_refresh_token(self):
+        return self._refresh_token
+
+    def get_expiry_time(self):
+        return self._expires_at
 
     def get_devices(self):
         response = self._api_request()
@@ -79,21 +116,6 @@ class Session(object):
         return self._api_post(data=data, path=f"/{device_id}/mgr/away_status")
 
 
-def get_session(api_name, basic_auth_credentials, username, password):
-    token_data = f'grant_type=password&username={username}&password={password}'
-    token_headers = {
-        'authorization': f'Basic {basic_auth_credentials}',
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
-
-    token_url = f"https://api-{api_name}.helki.com/client/token"
-    response = requests.post(token_url, data=token_data, headers=token_headers)
-    r = response.json()
-    if r['token_type'] != 'bearer':
-        raise RuntimeError(f"Unsupported token type {r['token_type']}")
-    return Session(api_name, r['access_token'], r['refresh_token'], r['expires_in'])
-
-
 @click.group(chain=True)
 @click.option('-a', '--api-name', required=True, help='API name')
 @click.option('-b', '--basic-auth-creds', required=True, help='API basic auth credentials')
@@ -105,7 +127,7 @@ def smartbox(ctx, api_name, basic_auth_creds, username, password, verbose):
     ctx.ensure_object(dict)
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
 
-    session = get_session(api_name, basic_auth_creds, username, password)
+    session = Session(api_name, basic_auth_creds, username, password)
     ctx.obj['session'] = session
 
 
