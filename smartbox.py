@@ -1,18 +1,23 @@
+import asyncio
 import click
 import datetime
 import json
 import logging
 import pprint
 import requests
+import socketio
+import urllib
 
 _MIN_TOKEN_LIFETIME = 60  # Minimum time left before expiry before we refresh (seconds)
 
 
 class Session(object):
-    def __init__(self, api_name, basic_auth_credentials, username, password):
+    def __init__(self, api_name, basic_auth_credentials, username, password, verbose=False):
         self._api_name = api_name
+        self._api_host = f"https://api-{self._api_name}.helki.com"
         self._basic_auth_credentials = basic_auth_credentials
         self._auth({'grant_type': 'password', 'username': username, 'password': password})
+        self._verbose = verbose
 
     def _auth(self, credentials):
         token_data = '&'.join(f"{k}={v}" for k, v in credentials.items())
@@ -21,7 +26,7 @@ class Session(object):
             'Content-Type': 'application/x-www-form-urlencoded',
         }
 
-        token_url = f"https://api-{self._api_name}.helki.com/client/token"
+        token_url = f"{self._api_host}/client/token"
         response = requests.post(token_url, data=token_data, headers=token_headers)
         r = response.json()
         self._access_token = r['access_token']
@@ -31,10 +36,15 @@ class Session(object):
                 f"Token expires in {r['expires_in']}s, which is below minimum lifetime of {_MIN_TOKEN_LIFETIME}s - will refresh again on next operation"
             )
         self._expires_at = datetime.datetime.now() + datetime.timedelta(seconds=r['expires_in'])
-        logging.debug(f"Authenticated session ({credentials['grant_type']}), access_token={self._access_token}, expires at {self._expires_at}")
+        logging.debug(
+            f"Authenticated session ({credentials['grant_type']}), access_token={self._access_token}, expires at {self._expires_at}"
+        )
+
+    def _has_token_expired(self):
+        return (self._expires_at - datetime.datetime.now()) < datetime.timedelta(seconds=_MIN_TOKEN_LIFETIME)
 
     def _check_refresh(self):
-        if (self._expires_at - datetime.datetime.now()) < datetime.timedelta(seconds=_MIN_TOKEN_LIFETIME):
+        if self._has_token_expired():
             self._auth({'grant_type': 'refresh_token', 'refresh_token': self._refresh_token})
 
     def _get_headers(self):
@@ -45,16 +55,16 @@ class Session(object):
             "x-serialid": "5",
         }
 
-    def _api_request(self, path=""):
+    def _api_request(self, path):
         self._check_refresh()
-        api_url = f"https://api-{self._api_name}.helki.com/api/v2/devs{path}"
+        api_url = f"{self._api_host}/api/v2/{path}"
         response = requests.get(api_url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()
 
-    def _api_post(self, data, path=""):
+    def _api_post(self, data, path):
         self._check_refresh()
-        api_url = f"https://api-{self._api_name}.helki.com/api/v2/devs{path}"
+        api_url = f"{self._api_host}/api/v2/{path}"
         # TODO: json dump
         try:
             data_str = json.dumps(data)
@@ -67,6 +77,84 @@ class Session(object):
             logging.error(e.response.json())
             raise
         return response.json()
+
+    async def open_socket(self, device_id, dev_data_callback=None, node_update_callback=None):
+        if self._verbose:
+            sio = socketio.AsyncClient(logger=True, engineio_logger=True)
+        else:
+            logging.getLogger('socketio').setLevel(logging.ERROR)
+            logging.getLogger('engineio').setLevel(logging.ERROR)
+            sio = socketio.AsyncClient()
+
+        class TokenExpiredExcepton(Exception):
+            pass
+
+        namespace = '/api/v2/socket_io'
+
+        class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
+            def __init__(self, session, namespace=None):
+                super().__init__(namespace)
+                self._session = session
+                self._connected = False
+                self._received_message = False
+                self._received_dev_data = False
+
+            def on_connect(self):
+                logging.debug(f"Namespace {namespace} connected")
+                self._connected = True
+
+            def on_disconnect(self):
+                logging.info(f"Namespace {namespace} disconnected")
+                self._connected = False
+                self._received_message = False
+                self._received_dev_data = False
+
+                # check if we need to refresh our token
+                if self._session._has_token_expired():
+                    logging.info("Token expired, disconnecting")
+                    sio.disconnect()
+
+            async def on_dev_data(self, data):
+                logging.debug(f"Received dev_data: {data}")
+                self._received_message = True
+                self._received_dev_data = True
+                if dev_data_callback is not None:
+                    dev_data_callback(data)
+
+            async def on_update(self, data):
+                logging.debug(f"Received update: {data}")
+                if not self._received_message:
+                    # The connection is only usable once we've received a
+                    # message from the server (not on the connect event!!), so
+                    # we wait to receive something before sending our first
+                    # message
+                    await sio.emit('dev_data', namespace=namespace)
+                    self._received_message = True
+                if not self._received_dev_data:
+                    logging.debug("Dev data not received yet, ignoring update")
+                    return
+                if node_update_callback is not None:
+                    node_update_callback(data)
+
+        sio.register_namespace(SmartboxAPIV2Namespace(self, namespace))
+
+        async def send_ping(interval):
+            while True:
+                await asyncio.sleep(interval)
+                logging.debug("Sending ping")
+                await sio.send('ping', namespace=namespace)
+
+        sio.start_background_task(send_ping, 20)
+
+        while True:
+            encoded_token = urllib.parse.quote(self._access_token, safe='~()*!.\'')
+            url = f"{self._api_host}:443/?token={self._access_token}&dev_id={device_id}"
+
+            logging.debug(f"Connecting to {url}")
+            await sio.connect(url, namespaces=[f"{namespace}?token={self._access_token}&dev_id={device_id}"])
+
+            await sio.wait()
+            self._check_refresh()
 
     def get_api_name(self):
         return self._api_name
@@ -81,24 +169,28 @@ class Session(object):
         return self._expires_at
 
     def get_devices(self):
-        response = self._api_request()
+        response = self._api_request("devs")
         return response['devs']
 
+    def get_grouped_devices(self):
+        response = self._api_request("grouped_devs")
+        return response
+
     def get_nodes(self, device_id):
-        response = self._api_request(f"/{device_id}/mgr/nodes")
+        response = self._api_request(f"devs/{device_id}/mgr/nodes")
         return response['nodes']
 
     def get_status(self, device_id, node):
-        return self._api_request(f"/{device_id}/{node['type']}/{node['addr']}/status")
+        return self._api_request(f"devs/{device_id}/{node['type']}/{node['addr']}/status")
 
     def set_status(self, device_id, node, status_args):
         data = {k: v for k, v in status_args.items() if v is not None}
         if 'stemp' in data and 'units' not in data:
             raise ValueError("Must supply unit with temperature fields")
-        return self._api_post(data=data, path=f"/{device_id}/{node['type']}/{node['addr']}/status")
+        return self._api_post(data=data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/status")
 
     def get_setup(self, device_id, node):
-        return self._api_request(f"/{device_id}/{node['type']}/{node['addr']}/setup")
+        return self._api_request(f"devs/{device_id}/{node['type']}/{node['addr']}/setup")
 
     def set_setup(self, device_id, node, setup_args):
         data = {k: v for k, v in setup_args.items() if v is not None}
@@ -106,14 +198,14 @@ class Session(object):
         # values and update
         setup_data = self.get_setup(device_id, node)
         setup_data.update(data)
-        return self._api_post(data=setup_data, path=f"/{device_id}/{node['type']}/{node['addr']}/setup")
+        return self._api_post(data=setup_data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/setup")
 
     def get_away_status(self, device_id):
-        return self._api_request(f"/{device_id}/mgr/away_status")
+        return self._api_request(f"devs/{device_id}/mgr/away_status")
 
     def set_away_status(self, device_id, status_args):
         data = {k: v for k, v in status_args.items() if v is not None}
-        return self._api_post(data=data, path=f"/{device_id}/mgr/away_status")
+        return self._api_post(data=data, path=f"devs/{device_id}/mgr/away_status")
 
 
 @click.group(chain=True)
@@ -125,9 +217,10 @@ class Session(object):
 @click.pass_context
 def smartbox(ctx, api_name, basic_auth_creds, username, password, verbose):
     ctx.ensure_object(dict)
-    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
-
-    session = Session(api_name, basic_auth_creds, username, password)
+    logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(name)s.%(funcName)s:%(lineno)d] %(message)s',
+                        level=logging.DEBUG if verbose else logging.INFO,
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    session = Session(api_name, basic_auth_creds, username, password, verbose)
     ctx.obj['session'] = session
 
 
@@ -247,3 +340,24 @@ def set_away_status(ctx, device_id, **kwargs):
     device = next(d for d in devices if d['dev_id'] == device_id)
 
     session.set_away_status(device['dev_id'], kwargs)
+
+
+@smartbox.command(
+    help=
+    'Open socket.io connection to device.  **Note: opening a session while another (e.g. web UI) is open does not work**'
+)
+@click.option('-d', '--device-id', required=True, help='Device ID to open socket for')
+@click.pass_context
+def socket(ctx, device_id):
+    session = ctx.obj['session']
+    pp = pprint.PrettyPrinter(indent=4)
+
+    def on_dev_data(data):
+        logging.info("Received dev_data:")
+        pp.pprint(data)
+
+    def on_update(data):
+        logging.info("Received update:")
+        pp.pprint(data)
+
+    asyncio.run(session.open_socket(device_id, on_dev_data, on_update))

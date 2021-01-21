@@ -1,9 +1,16 @@
 # smartbox
 Python API to control heating 'smart boxes'
 
-See [./rest_api.md] for REST endpoint docs.
+**Note: this is very much a work in progress**, a lot of functionality is
+missing or not fully working!
+
+See [./CHANGELOG.md] for release notes.
+
+See [./api-notes.md] for notes on REST and socket.io endpoints.
 
 ## TODO
+* Packaging (requirements.txt etc.)
+* Testing for socket.io session
 * Better name!
 * CI
 * Docs

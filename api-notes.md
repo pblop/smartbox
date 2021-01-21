@@ -1,5 +1,7 @@
-# REST endpoints
+# API notes
 Some brief notes on the REST endpoints used by this library.
+
+# REST API
 
 ## Auth
 
@@ -122,3 +124,19 @@ TODO /api/v2/users
 ### /version
 
 Get version info
+
+# Websocket API
+This uses the [socket.io] protocol.
+
+Briefly:
+* The socket session is per device
+* The access token and device ID must be supplied as query params
+* On successful connection, the client should emit a `dev_data` event. The
+  corresponding response from the server is similar to the dev_data REST
+  endpoint above
+* The server will send periodic `update` events containing node status updates
+  similar to the node status API endpoints above, one per node.
+* The client should send a `ping` message every 20s (in addition to the protocol
+  level ping/pong). Have not tested that this is strictly necessary.
+
+[socket.io]: https://socket.io/
