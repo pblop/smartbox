@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.3 (alpha)
+
+### Features
+* Fixed packaging
+
+### Bug Fixes
+* Fixed disconnect handling on token refresh
+
 ## 0.0.2 (alpha)
 
 ### Features

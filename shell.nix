@@ -10,7 +10,6 @@ buildPythonPackage rec {
                             freezegun
                             pytest
                             python-socketio
-                            pyyaml
                             requests
                             requests-mock
                             websocket_client

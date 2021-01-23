@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='smartbox',
-      version="0.0.1",
+      version="0.0.3",
       author="Graham Bennett",
       author_email="graham@grahambennett.org",
       description="Python API to control heating 'smart boxes'",
@@ -18,7 +18,12 @@ setup(name='smartbox',
           "Operating System :: OS Independent",
       ],
       python_requires='>=3.6',
-      install_requires=['Click', 'requests'],
+      install_requires=['aiohttp',
+                        'Click',
+                        'python-socketio',
+                        'requests',
+                        'websocket_client',
+                        ],
       entry_points='''
       [console_scripts]
       smartbox=smartbox:smartbox
