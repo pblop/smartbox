@@ -112,7 +112,7 @@ class Session(object):
                 # check if we need to refresh our token
                 if self._session._has_token_expired():
                     logging.info("Token expired, disconnecting")
-                    sio.disconnect()
+                    await sio.disconnect()
 
             async def on_dev_data(self, data):
                 logging.debug(f"Received dev_data: {data}")
