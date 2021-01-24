@@ -5,6 +5,13 @@ Some brief notes on the REST endpoints used by this library.
 
 ## Auth
 
+### Basic Auth Credential
+Initial authentication to the smartbox REST API is protected by HTTP Basic Auth,
+in addition to the user's username and password which are then used to obtain an
+access token. In order not to undermine the security layer it provides, and also
+because it might change over time or vary between implementations, **the token
+is not provided here and system owners need to find it themselves**.
+
 ### /api/v2/client/token
 POST: needs basic auth token provided in the `Authorization` header. See code
 for access token and refresh protocol.
