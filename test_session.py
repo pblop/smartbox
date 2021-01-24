@@ -1,6 +1,5 @@
 import datetime
 from freezegun import freeze_time
-import logging
 import pytest
 import smartbox
 
@@ -157,15 +156,15 @@ def test_refresh(requests_mock):
         assert session.get_refresh_token() == _MOCK_REFRESH_TOKEN
 
         # initial API call, no refresh needed
-        resp = session.get_devices()
+        session.get_devices()
 
         # move to 60s before expiry, no refresh should occur
         frozen_datetime.move_to(session.get_expiry_time() - datetime.timedelta(seconds=60))
-        resp = session.get_devices()
+        session.get_devices()
 
         # move to 5s before expiry, refresh should occur
         frozen_datetime.move_to(session.get_expiry_time() - datetime.timedelta(seconds=5))
-        resp = session.get_devices()
+        session.get_devices()
         assert token_request_matcher(requests_mock.request_history[-2], "refresh_token")
         assert session.get_expiry_time() == (frozen_datetime() + datetime.timedelta(seconds=_MOCK_EXPIRES_IN))
         assert session.get_access_token() == new_access_token
@@ -173,5 +172,5 @@ def test_refresh(requests_mock):
 
         # no refresh on next request
         requests_mock.reset_mock()
-        resp = session.get_devices()
+        session.get_devices()
         assert requests_mock.call_count == 1 and requests_mock.last_request.method == 'GET'

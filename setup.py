@@ -11,20 +11,21 @@ setup(name='smartbox',
       long_description=long_description,
       long_description_content_type="text/markdown",
       url="https://github.com/graham33/smartbox",
-      py_modules=['smartbox'],
+      packages=['smartbox'],
       classifiers=[
           "Programming Language :: Python :: 3",
           "License :: OSI Approved :: MIT License",
           "Operating System :: OS Independent",
       ],
       python_requires='>=3.6',
-      install_requires=['aiohttp',
-                        'Click',
-                        'python-socketio',
-                        'requests',
-                        'websocket_client',
-                        ],
+      install_requires=[
+          'aiohttp',
+          'Click',
+          'python-socketio',
+          'requests',
+          'websocket_client',
+      ],
       entry_points='''
       [console_scripts]
-      smartbox=smartbox:smartbox
+      smartbox=smartbox.cmd:smartbox
       ''')

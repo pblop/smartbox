@@ -9,6 +9,9 @@ buildPythonPackage rec {
                             flake8
                             freezegun
                             pytest
+                            pytest-asyncio
+                            pytest-mock
+                            pytest-randomly
                             python-socketio
                             requests
                             requests-mock
