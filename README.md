@@ -14,9 +14,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for release notes.
 See [api-notes.md](./api-notes.md) for notes on REST and socket.io endpoints.
 
 ## TODO
-* Packaging (requirements.txt etc.)
-* Testing for socket.io session
 * Better name!
 * CI
 * Docs
+* tox
 
