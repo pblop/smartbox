@@ -144,8 +144,7 @@ def set_away_status(ctx, device_id, **kwargs):
     session.set_away_status(device['dev_id'], kwargs)
 
 
-@smartbox.command(help=('Open socket.io connection to device.'
-                        '**Note: opening a session while another (e.g. web UI) is open does not work**'))
+@smartbox.command(help='Open socket.io connection to device.')
 @click.option('-d', '--device-id', required=True, help='Device ID to open socket for')
 @click.pass_context
 def socket(ctx, device_id):
