@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.4 (alpha)
+
+### Features
+* Refactor socket session and implement reconnect
+* Add note on basic auth credentials
+
 ## 0.0.3 (alpha)
 
 ### Features
