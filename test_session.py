@@ -15,7 +15,8 @@ _MOCK_DEV_ID = '2o3jo2jkj'
 _MOCK_DEV_NAME = 'My device'
 
 
-def test_basic(requests_mock):
+@pytest.fixture
+def session(requests_mock):
     requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/client/token",
                        json={
                            'token_type': _MOCK_TOKEN_TYPE,
@@ -23,12 +24,17 @@ def test_basic(requests_mock):
                            'expires_in': _MOCK_EXPIRES_IN,
                            'refresh_token': _MOCK_REFRESH_TOKEN,
                        })
-    session = smartbox.Session(_MOCK_API_NAME, _MOCK_BASIC_AUTH_CREDS, _MOCK_USERNAME, _MOCK_PASSWORD)
+    return smartbox.Session(_MOCK_API_NAME, _MOCK_BASIC_AUTH_CREDS, _MOCK_USERNAME, _MOCK_PASSWORD)
+
+
+def test_auth(requests_mock, session):
+    '''Test initial token request'''
     assert requests_mock.last_request.text == f'grant_type=password&username={_MOCK_USERNAME}&password={_MOCK_PASSWORD}'
     assert requests_mock.last_request.headers['authorization'] == f"Basic {_MOCK_BASIC_AUTH_CREDS}"
     assert session.get_api_name() == _MOCK_API_NAME
 
-    # devices
+
+def test_get_devices(requests_mock, session):
     requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs",
                       json={'devs': [{
                           'dev_id': _MOCK_DEV_ID,
@@ -39,7 +45,8 @@ def test_basic(requests_mock):
     assert resp[0]['dev_id'] == _MOCK_DEV_ID
     assert resp[0]['name'] == _MOCK_DEV_NAME
 
-    # nodes
+
+def test_get_nodes(requests_mock, session):
     node_1 = {'addr': 1, 'name': 'My heater', 'type': 'htr'}
     node_2 = {'addr': 2, 'name': 'My other heater', 'type': 'htr'}
     requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/nodes",
@@ -49,7 +56,10 @@ def test_basic(requests_mock):
     assert resp[0] == node_1
     assert resp[1] == node_2
 
-    # status
+
+def test_status(requests_mock, session):
+    node_1 = {'addr': 1, 'name': 'My heater', 'type': 'htr'}
+
     requests_mock.get(
         f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_1['type']}/{node_1['addr']}/status",
         json={
@@ -75,7 +85,10 @@ def test_basic(requests_mock):
     resp = session.set_status(_MOCK_DEV_ID, node_1, {'stemp': '17.0', 'units': 'C'})
     assert requests_mock.last_request.json() == {'stemp': '17.0', 'units': 'C'}
 
-    # setup
+
+def test_setup(requests_mock, session):
+    node_2 = {'addr': 2, 'name': 'My other heater', 'type': 'htr'}
+
     requests_mock.get(
         f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_2['type']}/{node_2['addr']}/setup",
         json={
@@ -95,6 +108,8 @@ def test_basic(requests_mock):
     resp = session.set_setup(_MOCK_DEV_ID, node_2, {'units': 'F'})
     assert requests_mock.last_request.json() == {'away_mode': 0, 'units': 'F'}
 
+
+def test_away(requests_mock, session):
     # away_status
     requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/away_status",
                       json={

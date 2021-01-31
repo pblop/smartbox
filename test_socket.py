@@ -92,7 +92,7 @@ class MockServer(object):
 
         @self._sio.event
         async def disconnect(sid):
-            _LOGGER.debug(f"{sid} connected")
+            _LOGGER.debug(f"{sid} disconnected")
             self._sid = None
 
     async def initialise(self):
@@ -123,6 +123,7 @@ class MockServer(object):
         return self._namespace._query_string
 
     async def disconnect_client(self):
+        _LOGGER.debug("Disconnecting client {self._sid}")
         assert self._sid is not None
         await self._sio.disconnect(self._sid)
 
@@ -222,6 +223,7 @@ async def test_reconnect(mock_session, unused_tcp_port):
     got_update.clear()
 
     # force a reconnect
+    _LOGGER.debug("Forcing reconnect")
     await mock_server.disconnect_client()
     _LOGGER.debug("Stopping site")
     await mock_server.site.stop()
