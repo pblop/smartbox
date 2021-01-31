@@ -117,17 +117,17 @@ def set_setup(ctx, device_id, node_addr, **kwargs):
     session.set_setup(device['dev_id'], node, kwargs)
 
 
-@smartbox.command(help='Show node away_status')
+@smartbox.command(help='Show device away_status')
 @click.pass_context
-def away_status(ctx):
+def device_away_status(ctx):
     session = ctx.obj['session']
     devices = session.get_devices()
     pp = pprint.PrettyPrinter(indent=4)
 
     for device in devices:
         print(f"{device['name']} (dev_id: {device['dev_id']})")
-        away_status = session.get_away_status(device['dev_id'])
-        pp.pprint(away_status)
+        device_away_status = session.get_device_away_status(device['dev_id'])
+        pp.pprint(device_away_status)
 
 
 @smartbox.command(help='Set device away_status (pass settings as extra args, e.g. mode=auto)')
@@ -136,12 +136,12 @@ def away_status(ctx):
 @click.option('--enabled', type=bool)
 @click.option('--forced', type=bool)
 @click.pass_context
-def set_away_status(ctx, device_id, **kwargs):
+def set_device_away_status(ctx, device_id, **kwargs):
     session = ctx.obj['session']
     devices = session.get_devices()
     device = next(d for d in devices if d['dev_id'] == device_id)
 
-    session.set_away_status(device['dev_id'], kwargs)
+    session.set_device_away_status(device['dev_id'], kwargs)
 
 
 @smartbox.command(help='Open socket.io connection to device.')

@@ -116,9 +116,9 @@ class Session(object):
         setup_data.update(data)
         return self._api_post(data=setup_data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/setup")
 
-    def get_away_status(self, device_id):
+    def get_device_away_status(self, device_id):
         return self._api_request(f"devs/{device_id}/mgr/away_status")
 
-    def set_away_status(self, device_id, status_args):
+    def set_device_away_status(self, device_id, status_args):
         data = {k: v for k, v in status_args.items() if v is not None}
         return self._api_post(data=data, path=f"devs/{device_id}/mgr/away_status")

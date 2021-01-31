@@ -109,14 +109,14 @@ def test_setup(requests_mock, session):
     assert requests_mock.last_request.json() == {'away_mode': 0, 'units': 'F'}
 
 
-def test_away(requests_mock, session):
+def test_device_away_status(requests_mock, session):
     # away_status
     requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/away_status",
                       json={
                           'away': False,
                           'enabled': True
                       })
-    resp = session.get_away_status(_MOCK_DEV_ID)
+    resp = session.get_device_away_status(_MOCK_DEV_ID)
     assert not resp['away']
     assert resp['enabled']
 
@@ -125,7 +125,7 @@ def test_away(requests_mock, session):
                            'away': True,
                            'enabled': True
                        })
-    resp = session.set_away_status(_MOCK_DEV_ID, {'away': True})
+    resp = session.set_device_away_status(_MOCK_DEV_ID, {'away': True})
     assert requests_mock.last_request.json() == {'away': True}
     assert resp['away']
     assert resp['enabled']
