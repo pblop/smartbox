@@ -83,11 +83,6 @@ GET: get node status
 POST: update node status. Only fields that are changing need to be supplied,
 but `units` must be provided with any temperature fields.
 
-### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/select
-GET: TODO: untested
-
-POST: select node TODO: what does this mean?
-
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/prog
 GET: get node programme
 
@@ -109,22 +104,10 @@ GET: get node setup
 POST: update node setup. Apparently all fields need to be provided even if
 unchanged.
 
-### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/away_status
-GET: get node away status
-
-POST: update node away status. Only fields that are changing need to be
-supplied.
-
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/samples
 GET: TODO: untested
 
 POST: TODO: untested
-
-## Groups
-TODO /api/v2/groups
-
-## Users
-TODO /api/v2/users
 
 ## Misc
 
@@ -141,9 +124,18 @@ Briefly:
 * On successful connection, the client should emit a `dev_data` event. The
   corresponding response from the server is similar to the dev_data REST
   endpoint above
-* The server will send periodic `update` events containing node status updates
-  similar to the node status API endpoints above, one per node.
+* The server will send periodic `update` events containing device and node
+  status updates
 * The client should send a `ping` message every 20s (in addition to the protocol
   level ping/pong). Have not tested that this is strictly necessary.
+
+## `update` Messages
+
+### Node Status - `/<node type>/<node addr>/status`
+Similar to the node status API endpoints above, one per node.
+
+### Device Away Status - `/mgr/away_status`
+Message content is the same structure as the `away_status` device API, or the
+corresponding field in the `dev_data` message or REST endpoint.
 
 [socket.io]: https://socket.io/
