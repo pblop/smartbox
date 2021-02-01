@@ -7,15 +7,17 @@ buildPythonPackage rec {
   propagatedBuildInputs = [ aiohttp
                             click
                             flake8
-                            freezegun
-                            pytest
-                            pytest-asyncio
-                            pytest-mock
-                            pytest-randomly
                             python-socketio
                             requests
-                            requests-mock
                             websocket_client
                             yapf
                           ];
+
+  checkInputs = [ freezegun
+                  pytest
+                  pytest-asyncio
+                  pytest-mock
+                  pytest-randomly
+                  requests-mock
+                  tox ];
 }

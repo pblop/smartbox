@@ -25,6 +25,14 @@ setup(name='smartbox',
           'requests',
           'websocket_client',
       ],
+      tests_require=[
+          'freezegun',
+          'pytest',
+          'pytest-asyncio',
+          'pytest-mock',
+          'pytest-randomly',
+          'requests-mock',
+      ],
       entry_points='''
       [console_scripts]
       smartbox=smartbox.cmd:smartbox
