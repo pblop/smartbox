@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.5 (alpha)
+
+### Features
+* Rename `away_status` to `device_away_status`
+* Update API docs
+* Add tox, tox and flake8 on github action
+
+### Bug Fixes
+* Pin dependency of python-socketio to match server
+
 ## 0.0.4 (alpha)
 
 ### Features
