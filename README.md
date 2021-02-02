@@ -1,4 +1,4 @@
-# smartbox
+# smartbox ![build](https://github.com/graham33/smartbox/workflows/Python%20package/badge.svg)
 Python API to control heating 'smart boxes'
 
 **Note: this is very much a work in progress**, a lot of functionality is
