@@ -15,7 +15,5 @@ See [api-notes.md](./api-notes.md) for notes on REST and socket.io endpoints.
 
 ## TODO
 * Better name!
-* CI
 * Docs
-* tox
 
