@@ -34,6 +34,18 @@ def test_auth(requests_mock, session):
     assert session.get_api_name() == _MOCK_API_NAME
 
 
+def test_auth_failure(requests_mock):
+    # missing access token
+    requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/client/token",
+                       json={
+                           'token_type': _MOCK_TOKEN_TYPE,
+                           'expires_in': _MOCK_EXPIRES_IN,
+                           'refresh_token': _MOCK_REFRESH_TOKEN,
+                       })
+    with pytest.raises(smartbox.SmartboxError):
+        smartbox.Session(_MOCK_API_NAME, _MOCK_BASIC_AUTH_CREDS, _MOCK_USERNAME, _MOCK_PASSWORD)
+
+
 def test_get_devices(requests_mock, session):
     requests_mock.get(f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs",
                       json={'devs': [{

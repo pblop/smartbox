@@ -3,6 +3,8 @@ import json
 import logging
 import requests
 
+from .error import SmartboxError
+
 _MIN_TOKEN_LIFETIME = 60  # Minimum time left before expiry before we refresh (seconds)
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +27,9 @@ class Session(object):
         token_url = f"{self._api_host}/client/token"
         response = requests.post(token_url, data=token_data, headers=token_headers)
         r = response.json()
+        if 'access_token' not in r or 'refresh_token' not in r or 'expires_in' not in r:
+            _LOGGER.error(f"Received invalid auth response, please check credentials: {r}")
+            raise SmartboxError("Received invalid auth response")
         self._access_token = r['access_token']
         self._refresh_token = r['refresh_token']
         if r['expires_in'] < _MIN_TOKEN_LIFETIME:
