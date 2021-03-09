@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 class Session(object):
     def __init__(self, api_name, basic_auth_credentials, username, password):
         self._api_name = api_name
-        self._api_host = f"https://api-{self._api_name}.helki.com"
+        self._api_host = f"https://{self._api_name}.helki.com"
         self._basic_auth_credentials = basic_auth_credentials
         self._auth({'grant_type': 'password', 'username': username, 'password': password})
 
