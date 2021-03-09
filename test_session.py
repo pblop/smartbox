@@ -17,7 +17,7 @@ _MOCK_DEV_NAME = 'My device'
 
 @pytest.fixture
 def session(requests_mock):
-    requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/client/token",
+    requests_mock.post(f"https://{_MOCK_API_NAME}.helki.com/client/token",
                        json={
                            'token_type': _MOCK_TOKEN_TYPE,
                            'access_token': _MOCK_ACCESS_TOKEN,
@@ -35,7 +35,7 @@ def test_auth(requests_mock, session):
 
 
 def test_get_devices(requests_mock, session):
-    requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs",
+    requests_mock.get(f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs",
                       json={'devs': [{
                           'dev_id': _MOCK_DEV_ID,
                           'name': _MOCK_DEV_NAME,
@@ -61,7 +61,7 @@ def test_status(requests_mock, session):
     node_1 = {'addr': 1, 'name': 'My heater', 'type': 'htr'}
 
     requests_mock.get(
-        f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_1['type']}/{node_1['addr']}/status",
+        f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_1['type']}/{node_1['addr']}/status",
         json={
             'mode': 'auto',
             'stemp': '16.0',
@@ -76,7 +76,7 @@ def test_status(requests_mock, session):
         resp = session.set_status(_MOCK_DEV_ID, node_1, {'stemp': '17.0'})
 
     requests_mock.post(
-        f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_1['type']}/{node_1['addr']}/status",
+        f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_1['type']}/{node_1['addr']}/status",
         json={
             'mode': 'auto',
             'stemp': '17.0',
@@ -90,7 +90,7 @@ def test_setup(requests_mock, session):
     node_2 = {'addr': 2, 'name': 'My other heater', 'type': 'htr'}
 
     requests_mock.get(
-        f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_2['type']}/{node_2['addr']}/setup",
+        f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_2['type']}/{node_2['addr']}/setup",
         json={
             'away_mode': 0,
             'units': 'C'
@@ -100,7 +100,7 @@ def test_setup(requests_mock, session):
     assert resp['units'] == 'C'
 
     requests_mock.post(
-        f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_2['type']}/{node_2['addr']}/setup",
+        f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/{node_2['type']}/{node_2['addr']}/setup",
         json={
             'away_mode': 0,
             'units': 'F'
@@ -111,7 +111,7 @@ def test_setup(requests_mock, session):
 
 def test_device_away_status(requests_mock, session):
     # away_status
-    requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/away_status",
+    requests_mock.get(f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/away_status",
                       json={
                           'away': False,
                           'enabled': True
@@ -120,7 +120,7 @@ def test_device_away_status(requests_mock, session):
     assert not resp['away']
     assert resp['enabled']
 
-    requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/away_status",
+    requests_mock.post(f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/away_status",
                        json={
                            'away': True,
                            'enabled': True
@@ -136,7 +136,7 @@ def test_refresh(requests_mock):
         return f"grant_type={grant_type}" in request.text.split('&')
 
     # login response
-    requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/client/token",
+    requests_mock.post(f"https://{_MOCK_API_NAME}.helki.com/client/token",
                        json={
                            'token_type': _MOCK_TOKEN_TYPE,
                            'access_token': _MOCK_ACCESS_TOKEN,
@@ -148,7 +148,7 @@ def test_refresh(requests_mock):
     # refresh response
     new_access_token = 'sf8s9f09dfsj'
     new_refresh_token = 'oij09j43rj434f'
-    requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/client/token",
+    requests_mock.post(f"https://{_MOCK_API_NAME}.helki.com/client/token",
                        json={
                            'token_type': _MOCK_TOKEN_TYPE,
                            'access_token': new_access_token,
@@ -157,7 +157,7 @@ def test_refresh(requests_mock):
                        },
                        additional_matcher=lambda request: token_request_matcher(request, "refresh_token"))
 
-    requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs",
+    requests_mock.get(f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs",
                       json={'devs': [{
                           'dev_id': _MOCK_DEV_ID,
                           'name': _MOCK_DEV_NAME,
