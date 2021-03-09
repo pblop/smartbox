@@ -49,7 +49,7 @@ def test_get_devices(requests_mock, session):
 def test_get_nodes(requests_mock, session):
     node_1 = {'addr': 1, 'name': 'My heater', 'type': 'htr'}
     node_2 = {'addr': 2, 'name': 'My other heater', 'type': 'htr'}
-    requests_mock.get(f"https://api-{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/nodes",
+    requests_mock.get(f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/mgr/nodes",
                       json={'nodes': [node_1, node_2]})
     resp = session.get_nodes(_MOCK_DEV_ID)
     assert len(resp) == 2
