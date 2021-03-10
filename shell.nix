@@ -4,8 +4,8 @@ with import <nixpkgs> {
       python38 = super.python38.override {
         packageOverrides = pySelf: pySuper: {
           # make sure we use python-socketio 4.x, even in nixpkgs unstable
-          python-engineio = self.nur.repos.graham33.python-engineio-3;
-          python-socketio = self.nur.repos.graham33.python-socketio-4;
+          python-engineio = self.nur.repos.graham33.python3Packages.python-engineio_3;
+          python-socketio = self.nur.repos.graham33.python3Packages.python-socketio_4;
         };
       };
       python38Packages = python38.pkgs;
@@ -37,6 +37,7 @@ buildPythonPackage rec {
     pytest-asyncio
     pytest-mock
     pytest-randomly
+    pytest-sugar
     requests-mock
     tox
   ];
