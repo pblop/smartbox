@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.6 (alpha)
+
+### Features
+* Throw exception on auth failures
+
+### Breaking Changes
+* Allow APIs which don't start with 'api-' (@patrickbusch) - #6
+  * Some installations use API names that don't start with 'api-'
+  * You now must pass 'api-foo' where you previously passed 'foo' as the API
+    name parameter
+
 ## 0.0.5 (alpha)
 
 ### Features
