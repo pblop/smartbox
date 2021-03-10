@@ -36,7 +36,7 @@ def test_auth(requests_mock, session):
 
 def test_auth_failure(requests_mock):
     # missing access token
-    requests_mock.post(f"https://api-{_MOCK_API_NAME}.helki.com/client/token",
+    requests_mock.post(f"https://{_MOCK_API_NAME}.helki.com/client/token",
                        json={
                            'token_type': _MOCK_TOKEN_TYPE,
                            'expires_in': _MOCK_EXPIRES_IN,
