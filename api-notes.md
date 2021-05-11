@@ -66,7 +66,8 @@ GET: device date and time info
 POST: TODO untested
 
 ## Nodes
-Note: node type apparently can be `htr`, `thm` or `acm` (only htr tested).
+Note: node type apparently can be `htr`, `htr_mod`, `thm` or `acm` (only htr
+tested).
 
 ### /api/v2/devs/<dev_id>/mgr/nodes
 GET: lists nodes
@@ -137,5 +138,12 @@ Similar to the node status API endpoints above, one per node.
 ### Device Away Status - `/mgr/away_status`
 Message content is the same structure as the `away_status` device API, or the
 corresponding field in the `dev_data` message or REST endpoint.
+
+### Other update messages (untested)
+* `/connected`
+* `/mgr/nodes`
+* `/<node type>/<node addr>/prog`
+* `/<node type>/<node addr>/setup`
+* `/<node type>/<node addr>/version`
 
 [socket.io]: https://socket.io/
