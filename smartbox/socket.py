@@ -2,7 +2,10 @@ import asyncio
 import logging
 import signal
 import socketio
+from typing import Any, Callable, Dict, Optional
 import urllib
+
+from .session import Session
 
 _API_V2_NAMESPACE = "/api/v2/socket_io"
 _RECONNECT_ATTEMPTS = 1  # We most commonly get disconnected when the session
@@ -13,8 +16,12 @@ _LOGGER = logging.getLogger(__name__)
 
 class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
     def __init__(
-        self, session, namespace, dev_data_callback=None, node_update_callback=None
-    ):
+        self,
+        session: Session,
+        namespace: str,
+        dev_data_callback: Optional[Callable] = None,
+        node_update_callback: Optional[Callable] = None,
+    ) -> None:
         super().__init__(namespace)
         self._session = session
         self._namespace = namespace
@@ -24,11 +31,11 @@ class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
         self._received_message = False
         self._received_dev_data = False
 
-    def on_connect(self):
+    def on_connect(self) -> None:
         _LOGGER.debug(f"Namespace {self._namespace} connected")
         self._namespace_connected = True
 
-    async def on_disconnect(self):
+    async def on_disconnect(self) -> None:
         _LOGGER.info(f"Namespace {self._namespace} disconnected")
         self._namespace_connected = False
         self._received_message = False
@@ -42,17 +49,17 @@ class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
             await self.disconnect()
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         return self._namespace_connected
 
-    async def on_dev_data(self, data):
+    async def on_dev_data(self, data: Dict[str, Any]) -> None:
         _LOGGER.debug(f"Received dev_data: {data}")
         self._received_message = True
         self._received_dev_data = True
         if self._dev_data_callback is not None:
             self._dev_data_callback(data)
 
-    async def on_update(self, data):
+    async def on_update(self, data: Dict[str, Any]) -> None:
         _LOGGER.debug(f"Received update: {data}")
         if not self._received_message:
             # The connection is only usable once we've received a message from
@@ -70,14 +77,14 @@ class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
 class SocketSession(object):
     def __init__(
         self,
-        session,
-        device_id,
-        dev_data_callback=None,
-        node_update_callback=None,
-        verbose=False,
-        add_sigint_handler=False,
-        ping_interval=20,
-    ):
+        session: Session,
+        device_id: str,
+        dev_data_callback: Optional[Callable] = None,
+        node_update_callback: Optional[Callable] = None,
+        verbose: bool = False,
+        add_sigint_handler: bool = False,
+        ping_interval: int = 20,
+    ) -> None:
         self._session = session
         self._device_id = device_id
         self._ping_interval = ping_interval
@@ -123,7 +130,7 @@ class SocketSession(object):
             _LOGGER.debug("Sending ping")
             await self._sio.send("ping", namespace=_API_V2_NAMESPACE)
 
-    async def run(self):
+    async def run(self) -> None:
         self._ping_task = self._sio.start_background_task(self._send_ping)
 
         # Will loop indefinitely unless our signal handler is set and called
@@ -153,7 +160,7 @@ class SocketSession(object):
 
             await self._sio.disconnect()
 
-    async def cancel(self):
+    async def cancel(self) -> None:
         _LOGGER.debug("Disconnecting and cancelling tasks")
         self._loop_should_exit = True
         await self._sio.disconnect()

@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup  # type: ignore
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -12,6 +12,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/graham33/smartbox",
+    package_data={"smartbox": ["py.typed"]},
     packages=["smartbox"],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -41,4 +42,5 @@ setup(
       [console_scripts]
       smartbox=smartbox.cmd:smartbox
       """,
+    zip_safe=False,
 )

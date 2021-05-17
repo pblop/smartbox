@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import requests
+from typing import Any, Dict, List
 
 from .error import SmartboxError
 
@@ -11,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Session(object):
-    def __init__(self, api_name, basic_auth_credentials, username, password):
+    def __init__(
+        self, api_name: str, basic_auth_credentials: str, username: str, password: str
+    ) -> None:
         self._api_name = api_name
         self._api_host = f"https://{self._api_name}.helki.com"
         self._basic_auth_credentials = basic_auth_credentials
@@ -19,7 +22,7 @@ class Session(object):
             {"grant_type": "password", "username": username, "password": password}
         )
 
-    def _auth(self, credentials):
+    def _auth(self, credentials: Dict[str, str]) -> None:
         token_data = "&".join(f"{k}={v}" for k, v in credentials.items())
         token_headers = {
             "authorization": f"Basic {self._basic_auth_credentials}",
@@ -53,18 +56,18 @@ class Session(object):
             )
         )
 
-    def _has_token_expired(self):
+    def _has_token_expired(self) -> bool:
         return (self._expires_at - datetime.datetime.now()) < datetime.timedelta(
             seconds=_MIN_TOKEN_LIFETIME
         )
 
-    def _check_refresh(self):
+    def _check_refresh(self) -> None:
         if self._has_token_expired():
             self._auth(
                 {"grant_type": "refresh_token", "refresh_token": self._refresh_token}
             )
 
-    def _get_headers(self):
+    def _get_headers(self) -> Dict[str, str]:
         return {
             "Authorization": f"Bearer {self._access_token}",
             "Content-Type": "application/json",
@@ -72,14 +75,14 @@ class Session(object):
             "x-serialid": "5",
         }
 
-    def _api_request(self, path):
+    def _api_request(self, path: str) -> Any:
         self._check_refresh()
         api_url = f"{self._api_host}/api/v2/{path}"
         response = requests.get(api_url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()
 
-    def _api_post(self, data, path):
+    def _api_post(self, data: Any, path: str) -> Any:
         self._check_refresh()
         api_url = f"{self._api_host}/api/v2/{path}"
         # TODO: json dump
@@ -97,19 +100,19 @@ class Session(object):
             raise
         return response.json()
 
-    def get_api_name(self):
+    def get_api_name(self) -> str:
         return self._api_name
 
-    def get_access_token(self):
+    def get_access_token(self) -> str:
         return self._access_token
 
-    def get_refresh_token(self):
+    def get_refresh_token(self) -> str:
         return self._refresh_token
 
-    def get_expiry_time(self):
+    def get_expiry_time(self) -> datetime.datetime:
         return self._expires_at
 
-    def get_devices(self):
+    def get_devices(self) -> List[Dict[str, Any]]:
         response = self._api_request("devs")
         return response["devs"]
 
@@ -117,16 +120,21 @@ class Session(object):
         response = self._api_request("grouped_devs")
         return response
 
-    def get_nodes(self, device_id):
+    def get_nodes(self, device_id: str) -> List[Dict[str, Any]]:
         response = self._api_request(f"devs/{device_id}/mgr/nodes")
         return response["nodes"]
 
-    def get_status(self, device_id, node):
+    def get_status(self, device_id: str, node: Dict[str, Any]) -> Dict[str, str]:
         return self._api_request(
             f"devs/{device_id}/{node['type']}/{node['addr']}/status"
         )
 
-    def set_status(self, device_id, node, status_args):
+    def set_status(
+        self,
+        device_id: str,
+        node: Dict[str, Any],
+        status_args: Dict[str, Any],
+    ) -> Dict[str, Any]:
         data = {k: v for k, v in status_args.items() if v is not None}
         if "stemp" in data and "units" not in data:
             raise ValueError("Must supply unit with temperature fields")
@@ -134,12 +142,17 @@ class Session(object):
             data=data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/status"
         )
 
-    def get_setup(self, device_id, node):
+    def get_setup(self, device_id: str, node: Dict[str, Any]) -> Dict[str, Any]:
         return self._api_request(
             f"devs/{device_id}/{node['type']}/{node['addr']}/setup"
         )
 
-    def set_setup(self, device_id, node, setup_args):
+    def set_setup(
+        self,
+        device_id: str,
+        node: Dict[str, Any],
+        setup_args: Dict[str, Any],
+    ) -> Dict[str, Any]:
         data = {k: v for k, v in setup_args.items() if v is not None}
         # setup seems to require all settings to be re-posted, so get current
         # values and update
@@ -150,9 +163,11 @@ class Session(object):
             path=f"devs/{device_id}/{node['type']}/{node['addr']}/setup",
         )
 
-    def get_device_away_status(self, device_id):
+    def get_device_away_status(self, device_id: str) -> Dict[str, Any]:
         return self._api_request(f"devs/{device_id}/mgr/away_status")
 
-    def set_device_away_status(self, device_id, status_args):
+    def set_device_away_status(
+        self, device_id: str, status_args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         data = {k: v for k, v in status_args.items() if v is not None}
         return self._api_post(data=data, path=f"devs/{device_id}/mgr/away_status")
