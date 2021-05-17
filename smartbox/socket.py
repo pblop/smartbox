@@ -4,7 +4,7 @@ import signal
 import socketio
 import urllib
 
-_API_V2_NAMESPACE = '/api/v2/socket_io'
+_API_V2_NAMESPACE = "/api/v2/socket_io"
 _RECONNECT_ATTEMPTS = 1  # We most commonly get disconnected when the session
 # expires, so we don't want to try many times
 
@@ -12,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
-    def __init__(self, session, namespace, dev_data_callback=None, node_update_callback=None):
+    def __init__(
+        self, session, namespace, dev_data_callback=None, node_update_callback=None
+    ):
         super().__init__(namespace)
         self._session = session
         self._namespace = namespace
@@ -56,7 +58,7 @@ class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
             # The connection is only usable once we've received a message from
             # the server (not on the connect event!!!), so we wait to receive
             # something before sending our first message
-            await self.emit('dev_data', namespace=self._namespace)
+            await self.emit("dev_data", namespace=self._namespace)
             self._received_message = True
         if not self._received_dev_data:
             _LOGGER.debug("Dev data not received yet, ignoring update")
@@ -66,28 +68,34 @@ class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
 
 
 class SocketSession(object):
-    def __init__(self,
-                 session,
-                 device_id,
-                 dev_data_callback=None,
-                 node_update_callback=None,
-                 verbose=False,
-                 add_sigint_handler=False,
-                 ping_interval=20):
+    def __init__(
+        self,
+        session,
+        device_id,
+        dev_data_callback=None,
+        node_update_callback=None,
+        verbose=False,
+        add_sigint_handler=False,
+        ping_interval=20,
+    ):
         self._session = session
         self._device_id = device_id
         self._ping_interval = ping_interval
 
         if verbose:
-            self._sio = socketio.AsyncClient(logger=True,
-                                             engineio_logger=True,
-                                             reconnection_attempts=_RECONNECT_ATTEMPTS)
+            self._sio = socketio.AsyncClient(
+                logger=True,
+                engineio_logger=True,
+                reconnection_attempts=_RECONNECT_ATTEMPTS,
+            )
         else:
-            logging.getLogger('socketio').setLevel(logging.ERROR)
-            logging.getLogger('engineio').setLevel(logging.ERROR)
+            logging.getLogger("socketio").setLevel(logging.ERROR)
+            logging.getLogger("engineio").setLevel(logging.ERROR)
             self._sio = socketio.AsyncClient()
 
-        self._api_v2_ns = SmartboxAPIV2Namespace(session, _API_V2_NAMESPACE, dev_data_callback, node_update_callback)
+        self._api_v2_ns = SmartboxAPIV2Namespace(
+            session, _API_V2_NAMESPACE, dev_data_callback, node_update_callback
+        )
         self._sio.register_namespace(self._api_v2_ns)
 
         @self._sio.event
@@ -113,7 +121,7 @@ class SocketSession(object):
                 _LOGGER.debug("Namespace disconnected, not sending ping")
                 continue
             _LOGGER.debug("Sending ping")
-            await self._sio.send('ping', namespace=_API_V2_NAMESPACE)
+            await self._sio.send("ping", namespace=_API_V2_NAMESPACE)
 
     async def run(self):
         self._ping_task = self._sio.start_background_task(self._send_ping)
@@ -123,12 +131,18 @@ class SocketSession(object):
 
         while not self._loop_should_exit:
             # TODO: accessors in session
-            encoded_token = urllib.parse.quote(self._session._access_token, safe='~()*!.\'')
+            encoded_token = urllib.parse.quote(
+                self._session._access_token, safe="~()*!.'"
+            )
             url = f"{self._session._api_host}/?token={encoded_token}&dev_id={self._device_id}"
 
             _LOGGER.debug(f"Connecting to {url}")
-            await self._sio.connect(url,
-                                    namespaces=[f"{_API_V2_NAMESPACE}?token={encoded_token}&dev_id={self._device_id}"])
+            await self._sio.connect(
+                url,
+                namespaces=[
+                    f"{_API_V2_NAMESPACE}?token={encoded_token}&dev_id={self._device_id}"
+                ],
+            )
             _LOGGER.debug("Connected")
 
             await self._sio.wait()

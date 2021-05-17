@@ -15,36 +15,54 @@ class Session(object):
         self._api_name = api_name
         self._api_host = f"https://{self._api_name}.helki.com"
         self._basic_auth_credentials = basic_auth_credentials
-        self._auth({'grant_type': 'password', 'username': username, 'password': password})
+        self._auth(
+            {"grant_type": "password", "username": username, "password": password}
+        )
 
     def _auth(self, credentials):
-        token_data = '&'.join(f"{k}={v}" for k, v in credentials.items())
+        token_data = "&".join(f"{k}={v}" for k, v in credentials.items())
         token_headers = {
-            'authorization': f'Basic {self._basic_auth_credentials}',
-            'Content-Type': 'application/x-www-form-urlencoded',
+            "authorization": f"Basic {self._basic_auth_credentials}",
+            "Content-Type": "application/x-www-form-urlencoded",
         }
 
         token_url = f"{self._api_host}/client/token"
         response = requests.post(token_url, data=token_data, headers=token_headers)
         r = response.json()
-        if 'access_token' not in r or 'refresh_token' not in r or 'expires_in' not in r:
-            _LOGGER.error(f"Received invalid auth response, please check credentials: {r}")
+        if "access_token" not in r or "refresh_token" not in r or "expires_in" not in r:
+            _LOGGER.error(
+                f"Received invalid auth response, please check credentials: {r}"
+            )
             raise SmartboxError("Received invalid auth response")
-        self._access_token = r['access_token']
-        self._refresh_token = r['refresh_token']
-        if r['expires_in'] < _MIN_TOKEN_LIFETIME:
-            _LOGGER.warning((f"Token expires in {r['expires_in']}s, which is below minimum lifetime "
-                             f"of {_MIN_TOKEN_LIFETIME}s - will refresh again on next operation"))
-        self._expires_at = datetime.datetime.now() + datetime.timedelta(seconds=r['expires_in'])
-        _LOGGER.debug((f"Authenticated session ({credentials['grant_type']}), "
-                       f"access_token={self._access_token}, expires at {self._expires_at}"))
+        self._access_token = r["access_token"]
+        self._refresh_token = r["refresh_token"]
+        if r["expires_in"] < _MIN_TOKEN_LIFETIME:
+            _LOGGER.warning(
+                (
+                    f"Token expires in {r['expires_in']}s, which is below minimum lifetime "
+                    f"of {_MIN_TOKEN_LIFETIME}s - will refresh again on next operation"
+                )
+            )
+        self._expires_at = datetime.datetime.now() + datetime.timedelta(
+            seconds=r["expires_in"]
+        )
+        _LOGGER.debug(
+            (
+                f"Authenticated session ({credentials['grant_type']}), "
+                f"access_token={self._access_token}, expires at {self._expires_at}"
+            )
+        )
 
     def _has_token_expired(self):
-        return (self._expires_at - datetime.datetime.now()) < datetime.timedelta(seconds=_MIN_TOKEN_LIFETIME)
+        return (self._expires_at - datetime.datetime.now()) < datetime.timedelta(
+            seconds=_MIN_TOKEN_LIFETIME
+        )
 
     def _check_refresh(self):
         if self._has_token_expired():
-            self._auth({'grant_type': 'refresh_token', 'refresh_token': self._refresh_token})
+            self._auth(
+                {"grant_type": "refresh_token", "refresh_token": self._refresh_token}
+            )
 
     def _get_headers(self):
         return {
@@ -68,7 +86,9 @@ class Session(object):
         try:
             data_str = json.dumps(data)
             _LOGGER.debug(f"Posting {data_str} to {api_url}")
-            response = requests.post(api_url, data=data_str, headers=self._get_headers())
+            response = requests.post(
+                api_url, data=data_str, headers=self._get_headers()
+            )
             response.raise_for_status()
         except requests.HTTPError as e:
             # TODO: logging
@@ -91,7 +111,7 @@ class Session(object):
 
     def get_devices(self):
         response = self._api_request("devs")
-        return response['devs']
+        return response["devs"]
 
     def get_grouped_devices(self):
         response = self._api_request("grouped_devs")
@@ -99,19 +119,25 @@ class Session(object):
 
     def get_nodes(self, device_id):
         response = self._api_request(f"devs/{device_id}/mgr/nodes")
-        return response['nodes']
+        return response["nodes"]
 
     def get_status(self, device_id, node):
-        return self._api_request(f"devs/{device_id}/{node['type']}/{node['addr']}/status")
+        return self._api_request(
+            f"devs/{device_id}/{node['type']}/{node['addr']}/status"
+        )
 
     def set_status(self, device_id, node, status_args):
         data = {k: v for k, v in status_args.items() if v is not None}
-        if 'stemp' in data and 'units' not in data:
+        if "stemp" in data and "units" not in data:
             raise ValueError("Must supply unit with temperature fields")
-        return self._api_post(data=data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/status")
+        return self._api_post(
+            data=data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/status"
+        )
 
     def get_setup(self, device_id, node):
-        return self._api_request(f"devs/{device_id}/{node['type']}/{node['addr']}/setup")
+        return self._api_request(
+            f"devs/{device_id}/{node['type']}/{node['addr']}/setup"
+        )
 
     def set_setup(self, device_id, node, setup_args):
         data = {k: v for k, v in setup_args.items() if v is not None}
@@ -119,7 +145,10 @@ class Session(object):
         # values and update
         setup_data = self.get_setup(device_id, node)
         setup_data.update(data)
-        return self._api_post(data=setup_data, path=f"devs/{device_id}/{node['type']}/{node['addr']}/setup")
+        return self._api_post(
+            data=setup_data,
+            path=f"devs/{device_id}/{node['type']}/{node['addr']}/setup",
+        )
 
     def get_device_away_status(self, device_id):
         return self._api_request(f"devs/{device_id}/mgr/away_status")
