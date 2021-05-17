@@ -1,44 +1,33 @@
-with import <nixpkgs> {
-  overlays = [
-    ( self: super: rec {
-      python38 = super.python38.override {
-        packageOverrides = pySelf: pySuper: {
-          # make sure we use python-socketio 4.x, even in nixpkgs unstable
-          python-engineio = self.nur.repos.graham33.python3Packages.python-engineio_3;
-          python-socketio = self.nur.repos.graham33.python3Packages.python-socketio_4;
-        };
-      };
-      python38Packages = python38.pkgs;
-    })
-  ];
-};
-with python38Packages;
-
-buildPythonPackage rec {
-  name = "smartbox";
-  src = ".";
-
-  nativeBuildInputs = [
-    pytest
+with import <nixpkgs> {};
+let
+  python = python38.override {
+    packageOverrides = pySelf: pySuper: {
+      inherit (nur.repos.graham33.python3Packages) monkeytype;
+      python-engineio = self.nur.repos.graham33.python3Packages.python-engineio_3;
+      python-socketio = self.nur.repos.graham33.python3Packages.python-socketio_4;
+      smartbox = nur.repos.graham33.python3Packages.smartbox.overrideAttrs (o: {
+        src = ./.;
+      });
+    };
+  };
+  pythonEnv = python.withPackages (ps: with ps; [
     flake8
-    yapf
-  ];
-
-  propagatedBuildInputs = [
-    aiohttp
-    click
-    python-socketio
-    requests
-    websocket_client
-  ];
-
-  checkInputs = [
+    smartbox
+    monkeytype
+    mypy
+    # TODO: duplicating checkInputs from smartbox
     freezegun
+    pytest
     pytest-asyncio
     pytest-mock
     pytest-randomly
     pytest-sugar
     requests-mock
     tox
+  ]);
+in mkShell {
+  buildInputs = [
+    black
+    pythonEnv
   ];
 }
