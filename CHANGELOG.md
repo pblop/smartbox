@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 (alpha)
+
+### Features
+* Added `mypy` type annotations
+* Reformatted with `black`
+* Added some more API notes
+
 ## 0.1.0 (alpha)
 (same as 0.0.6, bumped minor version due to breaking change)
 
