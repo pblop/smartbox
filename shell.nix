@@ -1,6 +1,6 @@
 with import <nixpkgs> {};
 let
-  python = python38.override {
+  python = python39.override {
     packageOverrides = pySelf: pySuper: {
       inherit (nur.repos.graham33.python3Packages) monkeytype;
       python-engineio = self.nur.repos.graham33.python3Packages.python-engineio_3;
