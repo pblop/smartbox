@@ -31,6 +31,7 @@ class Session(object):
 
         token_url = f"{self._api_host}/client/token"
         response = requests.post(token_url, data=token_data, headers=token_headers)
+        response.raise_for_status()
         r = response.json()
         if "access_token" not in r or "refresh_token" not in r or "expires_in" not in r:
             _LOGGER.error(

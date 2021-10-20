@@ -1,6 +1,7 @@
 import datetime
 from freezegun import freeze_time
 import pytest
+from requests.exceptions import HTTPError
 import smartbox
 
 _MOCK_API_NAME = "myapi"
@@ -55,6 +56,17 @@ def test_auth_failure(requests_mock):
         },
     )
     with pytest.raises(smartbox.SmartboxError):
+        smartbox.Session(
+            _MOCK_API_NAME, _MOCK_BASIC_AUTH_CREDS, _MOCK_USERNAME, _MOCK_PASSWORD
+        )
+
+
+def test_auth_error_response(requests_mock):
+    # Test a 401 error response from the server
+    requests_mock.post(
+        f"https://{_MOCK_API_NAME}.helki.com/client/token", status_code=401
+    )
+    with pytest.raises(HTTPError):
         smartbox.Session(
             _MOCK_API_NAME, _MOCK_BASIC_AUTH_CREDS, _MOCK_USERNAME, _MOCK_PASSWORD
         )
