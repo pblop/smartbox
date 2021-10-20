@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 (alpha)
+
+### Bug Fixes
+* Handle HTTP errors from auth POST requests
+
 ## 0.2.0 (alpha)
 
 ### Features
