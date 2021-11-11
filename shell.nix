@@ -2,10 +2,10 @@ with import <nixpkgs> {};
 let
   python = python39.override {
     packageOverrides = pySelf: pySuper: {
-      inherit (nur.repos.graham33.python3Packages) monkeytype;
-      python-engineio = self.nur.repos.graham33.python3Packages.python-engineio_3;
-      python-socketio = self.nur.repos.graham33.python3Packages.python-socketio_4;
-      smartbox = nur.repos.graham33.python3Packages.smartbox.overrideAttrs (o: {
+      inherit (nur.repos.graham33.python39Packages) monkeytype;
+      python-engineio = self.nur.repos.graham33.python39Packages.python-engineio_3;
+      python-socketio = self.nur.repos.graham33.python39Packages.python-socketio_4;
+      smartbox = nur.repos.graham33.python39Packages.smartbox.overrideAttrs (o: {
         src = ./.;
       });
     };
