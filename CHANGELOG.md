@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 (alpha)
+
+### Features
+* Try to reconnect the socketio connection multiple (3) times before giving up.
+  This means we will take longer to refresh our token, but should deal better
+  with transient connection issues.
+* Implement retry for session HTTP requests. This should help avoid transient
+  failures.
+
 ## 0.2.1 (alpha)
 
 ### Bug Fixes
