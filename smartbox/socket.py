@@ -8,8 +8,9 @@ import urllib
 from .session import Session
 
 _API_V2_NAMESPACE = "/api/v2/socket_io"
-_RECONNECT_ATTEMPTS = 1  # We most commonly get disconnected when the session
+# We most commonly get disconnected when the session
 # expires, so we don't want to try many times
+_DEFAULT_RECONNECT_ATTEMPTS = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +85,7 @@ class SocketSession(object):
         verbose: bool = False,
         add_sigint_handler: bool = False,
         ping_interval: int = 20,
+        reconnect_attempts: int = _DEFAULT_RECONNECT_ATTEMPTS,
     ) -> None:
         self._session = session
         self._device_id = device_id
@@ -93,7 +95,7 @@ class SocketSession(object):
             self._sio = socketio.AsyncClient(
                 logger=True,
                 engineio_logger=True,
-                reconnection_attempts=_RECONNECT_ATTEMPTS,
+                reconnection_attempts=reconnect_attempts,
             )
         else:
             logging.getLogger("socketio").setLevel(logging.ERROR)
