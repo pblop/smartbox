@@ -56,7 +56,7 @@ class MockServer(object):
             await self.emit("update", _TEST_UPDATE_2)
 
         async def on_connect(self, sid, environ):
-            _LOGGER.debug(f"{sid} connected to namespace ({environ})")
+            _LOGGER.debug(f"{sid} connected to namespace")
             self._query_string = environ["QUERY_STRING"]
 
             # reset state
@@ -97,7 +97,7 @@ class MockServer(object):
 
         @self._sio.event
         async def connect(sid, environ):
-            _LOGGER.debug(f"{sid} connected ({environ})")
+            _LOGGER.debug(f"{sid} connected")
             assert self._sid is None  # only one client
             self._sid = sid
 
