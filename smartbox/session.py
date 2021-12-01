@@ -2,11 +2,14 @@ import datetime
 import json
 import logging
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from typing import Any, Dict, List
 
 from .error import SmartboxError
 
 _MIN_TOKEN_LIFETIME = 60  # Minimum time left before expiry before we refresh (seconds)
+_RETRY_ATTEMPTS = 5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +21,18 @@ class Session(object):
         self._api_name = api_name
         self._api_host = f"https://{self._api_name}.helki.com"
         self._basic_auth_credentials = basic_auth_credentials
+
+        self._requests = requests.Session()
+        retry_strategy = Retry(  # type: ignore
+            total=_RETRY_ATTEMPTS,
+            backoff_factor=0.1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"],
+        )
+        http_adapter = HTTPAdapter(max_retries=retry_strategy)
+        self._requests.mount("http://", http_adapter)
+        self._requests.mount("https://", http_adapter)
+
         self._auth(
             {"grant_type": "password", "username": username, "password": password}
         )
@@ -30,7 +45,9 @@ class Session(object):
         }
 
         token_url = f"{self._api_host}/client/token"
-        response = requests.post(token_url, data=token_data, headers=token_headers)
+        response = self._requests.post(
+            token_url, data=token_data, headers=token_headers
+        )
         response.raise_for_status()
         r = response.json()
         if "access_token" not in r or "refresh_token" not in r or "expires_in" not in r:
@@ -79,7 +96,7 @@ class Session(object):
     def _api_request(self, path: str) -> Any:
         self._check_refresh()
         api_url = f"{self._api_host}/api/v2/{path}"
-        response = requests.get(api_url, headers=self._get_headers())
+        response = self._requests.get(api_url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()
 
@@ -90,7 +107,7 @@ class Session(object):
         try:
             data_str = json.dumps(data)
             _LOGGER.debug(f"Posting {data_str} to {api_url}")
-            response = requests.post(
+            response = self._requests.post(
                 api_url, data=data_str, headers=self._get_headers()
             )
             response.raise_for_status()
