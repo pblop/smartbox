@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0 (alpha)
+* Make retry attempts and backoff factor configurable
+
 ## 0.3.0 (alpha)
 
 ### Features

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="smartbox",
-    version="0.3.0",
+    version="0.4.0",
     author="Graham Bennett",
     author_email="graham@grahambennett.org",
     description="Python API to control heating 'smart boxes'",
