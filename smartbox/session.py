@@ -8,15 +8,22 @@ from typing import Any, Dict, List
 
 from .error import SmartboxError
 
+_DEFAULT_RETRY_ATTEMPTS = 5
+_DEFAULT_BACKOFF_FACTOR = 0.1
 _MIN_TOKEN_LIFETIME = 60  # Minimum time left before expiry before we refresh (seconds)
-_RETRY_ATTEMPTS = 5
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Session(object):
     def __init__(
-        self, api_name: str, basic_auth_credentials: str, username: str, password: str
+        self,
+        api_name: str,
+        basic_auth_credentials: str,
+        username: str,
+        password: str,
+        retry_attempts: int = _DEFAULT_RETRY_ATTEMPTS,
+        backoff_factor: float = _DEFAULT_BACKOFF_FACTOR,
     ) -> None:
         self._api_name = api_name
         self._api_host = f"https://{self._api_name}.helki.com"
@@ -24,8 +31,8 @@ class Session(object):
 
         self._requests = requests.Session()
         retry_strategy = Retry(  # type: ignore
-            total=_RETRY_ATTEMPTS,
-            backoff_factor=0.1,
+            total=retry_attempts,
+            backoff_factor=backoff_factor,
             status_forcelist=[429, 500, 502, 503, 504],
             allowed_methods=["GET", "POST"],
         )
