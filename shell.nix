@@ -1,16 +1,20 @@
-with import <nixpkgs> {};
-let
-  python = python39.override {
-    packageOverrides = pySelf: pySuper: {
-      inherit (nur.repos.graham33.python39Packages) monkeytype;
-      python-engineio = self.nur.repos.graham33.python39Packages.python-engineio_3;
-      python-socketio = self.nur.repos.graham33.python39Packages.python-socketio_4;
-      smartbox = nur.repos.graham33.python39Packages.smartbox.overrideAttrs (o: {
-        src = ./.;
+with import <nixpkgs> {
+  overlays = [
+    (self: super: rec {
+      home-assistant = super.nur.repos.graham33.home-assistant.override {
+        packageOverrides = self.lib.composeExtensions super.nur.repos.graham33.homeAssistantPackageOverrides pythonOverrides;
+      };
+
+      pythonOverrides = (pySelf: pySuper: rec {
+        smartbox = pySuper.smartbox.overridePythonAttrs (o: {
+          src = ./.;
+        });
       });
-    };
-  };
-  pythonEnv = python.withPackages (ps: with ps; [
+    })
+  ];
+};
+let
+  pythonEnv = home-assistant.python.withPackages (ps: with ps; [
     flake8
     smartbox
     monkeytype
