@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.0 (alpha)
+* Migrate to pyproject.toml, packaging improvements
+
 ## 0.4.0 (alpha)
 * Make retry attempts and backoff factor configurable
 

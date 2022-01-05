@@ -15,10 +15,12 @@ with import <nixpkgs> {
 };
 let
   pythonEnv = home-assistant.python.withPackages (ps: with ps; [
+    build
     flake8
     smartbox
     monkeytype
     mypy
+    pip
     # TODO: duplicating checkInputs from smartbox
     freezegun
     pytest
@@ -28,6 +30,7 @@ let
     pytest-sugar
     requests-mock
     tox
+    twine
   ]);
 in mkShell {
   buildInputs = [
