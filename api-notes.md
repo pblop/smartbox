@@ -27,47 +27,18 @@ GET: list devices
 ### /api/v2/grouped_devs
 GET: list devices with extra grouping info
 
-POST: TODO untested
-
 ### /api/v2/devs/<dev_id>/dev_data
 GET: Appears to be all device data, including most of the information obtainable
 via specific endpoints below.
 
-POST: TODO untested
-
-### /api/v2/devs/<dev_id>/geo_data
-GET: device geolocation data
-
-POST: TODO untested
-
 ### /api/v2/devs/<dev_id>/connected
 GET: device connection status
-
-POST: TODO untested
 
 ### /api/v2/devs/<dev_id>/mgr/away_status
 GET: device away status
 
-POST: TODO untested
-
-### /api/v2/devs/<dev_id>/mgr/discovery
-GET: device discovery status
-
-POST: TODO untested
-
-### /api/v2/devs/<dev_id>/htr_system/power_limit
-GET: heater power limit info
-
-POST: TODO untested
-
-### /api/v2/devs/<dev_id>/mgr/rtc/time
-GET: device date and time info
-
-POST: TODO untested
-
 ## Nodes
-Note: node type apparently can be `htr`, `htr_mod`, `thm` or `acm` (only htr
-tested).
+Known node types are `htr`, `htr_mod` and `acm`.
 
 ### /api/v2/devs/<dev_id>/mgr/nodes
 GET: lists nodes
@@ -75,8 +46,6 @@ GET: lists nodes
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>
 GET: Appears to be all node data, including most of the information obtainable
 via specific endpoints below.
-
-POST: TODO untested
 
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/status
 GET: get node status
@@ -87,34 +56,17 @@ but `units` must be provided with any temperature fields.
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/prog
 GET: get node programme
 
-POST: TODO untested
-
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/type
 GET: get node type
 
-POST: TODO untested
-
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/version
 GET: get node version info (firmware version etc)
-
-POST: TODO untested
 
 ### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/setup
 GET: get node setup
 
 POST: update node setup. Apparently all fields need to be provided even if
 unchanged.
-
-### /api/v2/devs/<dev_id>/<node_type>/<node_addr>/samples
-GET: TODO: untested
-
-POST: TODO: untested
-
-## Misc
-
-### /version
-
-Get version info
 
 # Websocket API
 This uses the [socket.io] protocol.
@@ -138,12 +90,5 @@ Similar to the node status API endpoints above, one per node.
 ### Device Away Status - `/mgr/away_status`
 Message content is the same structure as the `away_status` device API, or the
 corresponding field in the `dev_data` message or REST endpoint.
-
-### Other update messages (untested)
-* `/connected`
-* `/mgr/nodes`
-* `/<node type>/<node addr>/prog`
-* `/<node type>/<node addr>/setup`
-* `/<node type>/<node addr>/version`
 
 [socket.io]: https://socket.io/
