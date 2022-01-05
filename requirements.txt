@@ -1,2 +1,2 @@
-# install from setup.py
+# install from setup.cfg
 .

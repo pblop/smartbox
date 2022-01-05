@@ -1,0 +1,10 @@
+freezegun
+pytest
+pytest-asyncio
+pytest-flake8
+pytest-mock
+pytest-mypy
+pytest-randomly
+requests-mock
+types-freezegun
+types-requests
