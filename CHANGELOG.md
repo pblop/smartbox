@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.4 (alpha)
+* First PyPI release
+
+## 0.5.3 (alpha)
+(packaging fixes)
+
+## 0.5.2 (alpha)
+(packaging fixes)
+
+## 0.5.1 (alpha)
+(packaging fixes)
+
 ## 0.5.0 (alpha)
 * Migrate to pyproject.toml, packaging improvements
 
