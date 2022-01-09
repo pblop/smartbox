@@ -1,12 +1,16 @@
 import asyncio
 import click
+import json
 import logging
-import pprint
 
 from .session import Session
 from .socket import SocketSession
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _pretty_print(data):
+    print(json.dumps(data, indent=4, sort_keys=True))
 
 
 @click.group(chain=True)
@@ -37,8 +41,7 @@ def smartbox(ctx, api_name, basic_auth_creds, username, password, verbose):
 def devices(ctx):
     session = ctx.obj["session"]
     devices = session.get_devices()
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(devices)
+    _pretty_print(devices)
 
 
 @smartbox.command(help="Show nodes")
@@ -46,12 +49,11 @@ def devices(ctx):
 def nodes(ctx):
     session = ctx.obj["session"]
     devices = session.get_devices()
-    pp = pprint.PrettyPrinter(indent=4)
 
     for device in devices:
         print(f"{device['name']} (dev_id: {device['dev_id']})")
         nodes = session.get_nodes(device["dev_id"])
-        pp.pprint(nodes)
+        _pretty_print(nodes)
 
 
 @smartbox.command(help="Show node status")
@@ -59,7 +61,6 @@ def nodes(ctx):
 def status(ctx):
     session = ctx.obj["session"]
     devices = session.get_devices()
-    pp = pprint.PrettyPrinter(indent=4)
 
     for device in devices:
         print(f"{device['name']} (dev_id: {device['dev_id']})")
@@ -68,7 +69,7 @@ def status(ctx):
         for node in nodes:
             print(f"{node['name']} (addr: {node['addr']})")
             status = session.get_status(device["dev_id"], node)
-            pp.pprint(status)
+            _pretty_print(status)
 
 
 @smartbox.command(help="Set node status (pass settings as extra args, e.g. mode=auto)")
@@ -103,7 +104,6 @@ def set_status(ctx, device_id, node_addr, **kwargs):
 def setup(ctx):
     session = ctx.obj["session"]
     devices = session.get_devices()
-    pp = pprint.PrettyPrinter(indent=4)
 
     for device in devices:
         print(f"{device['name']} (dev_id: {device['dev_id']})")
@@ -112,7 +112,7 @@ def setup(ctx):
         for node in nodes:
             print(f"{node['name']} (addr: {node['addr']})")
             setup = session.get_setup(device["dev_id"], node)
-            pp.pprint(setup)
+            _pretty_print(setup)
 
 
 @smartbox.command(help="Set node setup (pass settings as extra args, e.g. mode=auto)")
@@ -140,12 +140,11 @@ def set_setup(ctx, device_id, node_addr, **kwargs):
 def device_away_status(ctx):
     session = ctx.obj["session"]
     devices = session.get_devices()
-    pp = pprint.PrettyPrinter(indent=4)
 
     for device in devices:
         print(f"{device['name']} (dev_id: {device['dev_id']})")
         device_away_status = session.get_device_away_status(device["dev_id"])
-        pp.pprint(device_away_status)
+        _pretty_print(device_away_status)
 
 
 @smartbox.command(
@@ -172,15 +171,14 @@ def set_device_away_status(ctx, device_id, **kwargs):
 def socket(ctx, device_id):
     session = ctx.obj["session"]
     verbose = ctx.obj["verbose"]
-    pp = pprint.PrettyPrinter(indent=4)
 
     def on_dev_data(data):
         _LOGGER.info("Received dev_data:")
-        pp.pprint(data)
+        _pretty_print(data)
 
     def on_update(data):
         _LOGGER.info("Received update:")
-        pp.pprint(data)
+        _pretty_print(data)
 
     socket_session = SocketSession(
         session, device_id, on_dev_data, on_update, verbose, add_sigint_handler=True
