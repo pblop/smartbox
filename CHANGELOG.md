@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 (alpha)
+
+### Features
+* Add `__version__` attribute
+
+### Breaking Changes
+* The `smartbox` command line tool now prints JSON rather than pretty-printed
+  python objects.
+* Removed setup.py
+
 ## 0.5.4 (alpha)
 * First PyPI release
 
