@@ -31,6 +31,7 @@ let
     requests-mock
     tox
     twine
+    types-requests
   ]);
 in mkShell {
   buildInputs = [

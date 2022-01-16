@@ -160,7 +160,7 @@ class SocketSession(object):
                         ],
                     )
                     break
-                except socketio.exceptions.ConnectionError as exc:
+                except socketio.exceptions.ConnectionError:
                     remaining = self._reconnect_attempts - attempt - 1
                     sleep_time = self._backoff_factor * (2 ** attempt)
                     _LOGGER.error(
