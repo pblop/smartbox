@@ -270,3 +270,34 @@ async def test_reconnect(mock_session, unused_tcp_port):
         if task != asyncio.current_task():
             _LOGGER.info(f"Task: {task}")
             _LOGGER.info(task.cancel())
+
+
+@pytest.mark.asyncio
+async def test_connect_retry(mock_session, mocker):
+    mock_async_client = mocker.MagicMock()
+    exception_attempts = 2
+
+    class TestFinishedException(Exception):
+        pass
+
+    async def connect_side_effect(*args, **kwargs):
+        nonlocal exception_attempts
+        if exception_attempts == 0:
+            raise TestFinishedException()
+        else:
+            exception_attempts -= 1
+            raise socketio.exceptions.ConnectionError("Test connection error")
+
+    mock_async_client.connect = mocker.AsyncMock(side_effect=connect_side_effect)
+    mock_async_client.disconnect = mocker.AsyncMock()
+    mock_async_client.wait = mocker.AsyncMock()
+    mocker.patch("socketio.AsyncClient", return_value=mock_async_client)
+    socket_session = SocketSession(
+        mock_session,
+        _MOCK_DEV_ID,
+        add_sigint_handler=True,
+    )
+
+    with pytest.raises(TestFinishedException):
+        client_task = asyncio.create_task(socket_session.run())
+        await client_task

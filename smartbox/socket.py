@@ -11,6 +11,7 @@ _API_V2_NAMESPACE = "/api/v2/socket_io"
 # We most commonly get disconnected when the session
 # expires, so we don't want to try many times
 _DEFAULT_RECONNECT_ATTEMPTS = 3
+_DEFAULT_BACKOFF_FACTOR = 0.1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,10 +87,13 @@ class SocketSession(object):
         add_sigint_handler: bool = False,
         ping_interval: int = 20,
         reconnect_attempts: int = _DEFAULT_RECONNECT_ATTEMPTS,
+        backoff_factor: float = _DEFAULT_BACKOFF_FACTOR,
     ) -> None:
         self._session = session
         self._device_id = device_id
         self._ping_interval = ping_interval
+        self._reconnect_attempts = reconnect_attempts
+        self._backoff_factor = backoff_factor
 
         if verbose:
             self._sio = socketio.AsyncClient(
@@ -145,13 +149,27 @@ class SocketSession(object):
             )
             url = f"{self._session._api_host}/?token={encoded_token}&dev_id={self._device_id}"
 
-            _LOGGER.debug(f"Connecting to {url}")
-            await self._sio.connect(
-                url,
-                namespaces=[
-                    f"{_API_V2_NAMESPACE}?token={encoded_token}&dev_id={self._device_id}"
-                ],
-            )
+            # Try to connect
+            for attempt in range(self._reconnect_attempts):
+                _LOGGER.debug(f"Connecting to {url} (attempt {attempt})")
+                try:
+                    await self._sio.connect(
+                        url,
+                        namespaces=[
+                            f"{_API_V2_NAMESPACE}?token={encoded_token}&dev_id={self._device_id}"
+                        ],
+                    )
+                    break
+                except socketio.exceptions.ConnectionError as exc:
+                    remaining = self._reconnect_attempts - attempt - 1
+                    sleep_time = self._backoff_factor * (2 ** attempt)
+                    _LOGGER.error(
+                        "Received error on connection attempt"
+                        f", {remaining} retries remaining"
+                        f", sleeping {sleep_time}s"
+                    )
+                    await asyncio.sleep(sleep_time)
+
             _LOGGER.debug("Connected")
 
             await self._sio.wait()
