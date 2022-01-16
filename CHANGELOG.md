@@ -3,6 +3,7 @@
 ## 0.7.0 (alpha)
 
 ### Features
+* Implement retry for initial socket connection
 
 ## 0.6.0 (alpha)
 
