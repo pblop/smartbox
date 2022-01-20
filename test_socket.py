@@ -273,21 +273,58 @@ async def test_reconnect(mock_session, unused_tcp_port):
 
 
 @pytest.mark.asyncio
-async def test_connect_retry(mock_session, mocker):
+async def test_connect_retry_success(mock_session, mocker):
     mock_async_client = mocker.MagicMock()
     exception_attempts = 2
+
+    async def connect_side_effect(*args, **kwargs):
+        nonlocal exception_attempts
+        if exception_attempts > 0:
+            exception_attempts -= 1
+            raise socketio.exceptions.ConnectionError("Test connection error")
 
     class TestFinishedException(Exception):
         pass
 
-    async def connect_side_effect(*args, **kwargs):
-        nonlocal exception_attempts
-        if exception_attempts == 0:
-            raise TestFinishedException()
-        else:
-            exception_attempts -= 1
-            raise socketio.exceptions.ConnectionError("Test connection error")
+    async def disconnect_side_effect(*args, **kwargs):
+        raise TestFinishedException()
 
+    mock_async_client.connect = mocker.AsyncMock(side_effect=connect_side_effect)
+    mock_async_client.wait = mocker.AsyncMock()
+    mock_async_client.disconnect = mocker.AsyncMock(side_effect=disconnect_side_effect)
+    mocker.patch("socketio.AsyncClient", return_value=mock_async_client)
+    socket_session = SocketSession(
+        mock_session,
+        _MOCK_DEV_ID,
+        add_sigint_handler=True,
+    )
+
+    with pytest.raises(TestFinishedException):
+        client_task = asyncio.create_task(socket_session.run())
+        await client_task
+
+    mock_async_client.connect.assert_awaited()
+    mock_async_client.disconnect.assert_awaited()
+    mock_async_client.wait.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_connect_retry_failure(mock_session, mocker):
+    mock_async_client = mocker.MagicMock()
+
+    # always fails
+    async def connect_side_effect(*args, **kwargs):
+        raise socketio.exceptions.ConnectionError("Test connection error")
+
+    class TestFinishedException(Exception):
+        pass
+
+    def check_refresh_side_effect(*args, **kwargs):
+        raise TestFinishedException()
+
+    mock_session._check_refresh = mocker.MagicMock(
+        side_effect=check_refresh_side_effect
+    )
     mock_async_client.connect = mocker.AsyncMock(side_effect=connect_side_effect)
     mock_async_client.disconnect = mocker.AsyncMock()
     mock_async_client.wait = mocker.AsyncMock()
@@ -301,3 +338,7 @@ async def test_connect_retry(mock_session, mocker):
     with pytest.raises(TestFinishedException):
         client_task = asyncio.create_task(socket_session.run())
         await client_task
+
+    mock_async_client.connect.assert_awaited()
+    mock_async_client.disconnect.assert_not_awaited()
+    mock_async_client.wait.assert_not_awaited()

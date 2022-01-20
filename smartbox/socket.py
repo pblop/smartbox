@@ -163,8 +163,6 @@ class SocketSession(object):
                             f"{_API_V2_NAMESPACE}?token={encoded_token}&dev_id={self._device_id}"
                         ],
                     )
-                    _LOGGER.info(f"Successfully connected to {url}")
-                    break
                 except socketio.exceptions.ConnectionError:
                     remaining = self._reconnect_attempts - attempt - 1
                     sleep_time = self._backoff_factor * (2 ** attempt)
@@ -173,15 +171,24 @@ class SocketSession(object):
                         f", {remaining} retries remaining"
                         f", sleeping {sleep_time}s"
                     )
-                    await asyncio.sleep(sleep_time)
+                    if remaining > 0:
+                        await asyncio.sleep(sleep_time)
+                    else:
+                        logging.warning(
+                            f"Failed to connect after {self._reconnect_attempts} attempts"
+                            ", falling through to refresh token"
+                        )
+                else:
+                    _LOGGER.info(f"Successfully connected to {url}")
+                    await self._sio.wait()
+                    _LOGGER.info("Socket loop exited, disconnecting")
+                    await self._sio.disconnect()
+                    _LOGGER.debug("Breaking loop to refresh token")
+                    break
 
-            await self._sio.wait()
-            _LOGGER.info("Socket loop exited, checking token")
-
+            # Refresh token
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, self._session._check_refresh)
-
-            await self._sio.disconnect()
 
     async def cancel(self) -> None:
         _LOGGER.debug("Disconnecting and cancelling tasks")
