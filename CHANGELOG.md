@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 (alpha)
+
+### Features
+* Improve socket logging
+* Improve reconnect logic
+
 ## 0.7.0 (alpha)
 
 ### Features
