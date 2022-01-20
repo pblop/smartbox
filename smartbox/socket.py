@@ -113,7 +113,7 @@ class SocketSession(object):
 
         @self._sio.event
         async def connect():
-            _LOGGER.debug("Connected")
+            _LOGGER.debug("Received connect socket event")
             if add_sigint_handler:
                 # engineio sets a signal handler on connect, which means we have to set our
                 # own in the connect callback if we want to override it
@@ -142,6 +142,7 @@ class SocketSession(object):
         # Will loop indefinitely unless our signal handler is set and called
         self._loop_should_exit = False
 
+        _LOGGER.debug("Starting main loop")
         while not self._loop_should_exit:
             # TODO: accessors in session
             encoded_token = urllib.parse.quote(
@@ -150,8 +151,11 @@ class SocketSession(object):
             url = f"{self._session._api_host}/?token={encoded_token}&dev_id={self._device_id}"
 
             # Try to connect
+            _LOGGER.debug(
+                f"Connecting to {url} (will try {self._reconnect_attempts} times)"
+            )
             for attempt in range(self._reconnect_attempts):
-                _LOGGER.debug(f"Connecting to {url} (attempt {attempt})")
+                _LOGGER.debug(f"Connecting to {url} (attempt #{attempt})")
                 try:
                     await self._sio.connect(
                         url,
@@ -159,6 +163,7 @@ class SocketSession(object):
                             f"{_API_V2_NAMESPACE}?token={encoded_token}&dev_id={self._device_id}"
                         ],
                     )
+                    _LOGGER.info(f"Successfully connected to {url}")
                     break
                 except socketio.exceptions.ConnectionError:
                     remaining = self._reconnect_attempts - attempt - 1
@@ -170,10 +175,8 @@ class SocketSession(object):
                     )
                     await asyncio.sleep(sleep_time)
 
-            _LOGGER.debug("Connected")
-
             await self._sio.wait()
-            _LOGGER.debug("Connection loop exited, checking token")
+            _LOGGER.info("Socket loop exited, checking token")
 
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, self._session._check_refresh)
