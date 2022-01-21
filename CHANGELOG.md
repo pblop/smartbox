@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.2 (alpha)
+
+### Bug Fixes
+* Always disconnect the socket when the namespace disconnects, not just when the
+  token has expired. This should address the situation where we the namespace
+  disconnects but apparently nothing reconnects the namespace since the socket
+  is still open.
+
 ## 0.7.1 (alpha)
 
 ### Features
