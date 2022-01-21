@@ -38,17 +38,12 @@ class SmartboxAPIV2Namespace(socketio.AsyncClientNamespace):
         self._namespace_connected = True
 
     async def on_disconnect(self) -> None:
-        _LOGGER.info(f"Namespace {self._namespace} disconnected")
+        _LOGGER.info(f"Namespace {self._namespace} disconnected, disconnecting socket")
         self._namespace_connected = False
         self._received_message = False
         self._received_dev_data = False
-
-        # check if we need to refresh our token
-        # TODO: public method
-        if self._session._has_token_expired():
-            _LOGGER.info("Token expired, disconnecting")
-            # we need to call disconnect to disconnect all namespaces
-            await self.disconnect()
+        # we need to call disconnect to disconnect all namespaces
+        await self.disconnect()
 
     @property
     def connected(self) -> bool:
