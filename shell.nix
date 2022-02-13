@@ -1,15 +1,7 @@
 with import <nixpkgs> {
   overlays = [
     (self: super: rec {
-      home-assistant = super.nur.repos.graham33.home-assistant.override {
-        packageOverrides = self.lib.composeExtensions super.nur.repos.graham33.homeAssistantPackageOverrides pythonOverrides;
-      };
-
-      pythonOverrides = (pySelf: pySuper: rec {
-        smartbox = pySuper.smartbox.overridePythonAttrs (o: {
-          src = ./.;
-        });
-      });
+      home-assistant = super.nur.repos.graham33.home-assistant;
     })
   ];
 };
@@ -17,11 +9,16 @@ let
   pythonEnv = home-assistant.python.withPackages (ps: with ps; [
     build
     flake8
-    smartbox
     monkeytype
     mypy
     pip
-    # TODO: duplicating checkInputs from smartbox
+    # TODO: duplicating buildInputs checkInputs from smartbox
+    aiohttp
+    click
+    python-socketio_4
+    pyyaml
+    requests
+    websocket_client
     freezegun
     pytest
     pytest-asyncio
