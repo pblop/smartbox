@@ -165,6 +165,23 @@ def test_device_away_status(requests_mock, session):
     assert resp["enabled"]
 
 
+def test_device_power_limit(requests_mock, session):
+    test_limit = 3500
+    requests_mock.get(
+        f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/htr_system/power_limit",
+        json={"power_limit": str(test_limit)},
+    )
+    assert session.get_device_power_limit(_MOCK_DEV_ID) == test_limit
+
+    new_limit = 3500
+    requests_mock.post(
+        f"https://{_MOCK_API_NAME}.helki.com/api/v2/devs/{_MOCK_DEV_ID}/htr_system/power_limit",
+        json={"power_limit": str(new_limit)},
+    )
+    session.set_device_power_limit(_MOCK_DEV_ID, new_limit)
+    assert requests_mock.last_request.json() == {"power_limit": str(new_limit)}
+
+
 def test_refresh(requests_mock):
     def token_request_matcher(request, grant_type):
         return f"grant_type={grant_type}" in request.text.split("&")

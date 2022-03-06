@@ -196,3 +196,13 @@ class Session(object):
     ) -> Dict[str, Any]:
         data = {k: v for k, v in status_args.items() if v is not None}
         return self._api_post(data=data, path=f"devs/{device_id}/mgr/away_status")
+
+    def get_device_power_limit(self, device_id: str) -> int:
+        resp = self._api_request(f"devs/{device_id}/htr_system/power_limit")
+        return int(resp["power_limit"])
+
+    def set_device_power_limit(self, device_id: str, power_limit: int) -> None:
+        data = {"power_limit": str(power_limit)}
+        resp = self._api_post(
+            data=data, path=f"devs/{device_id}/htr_system/power_limit"
+        )

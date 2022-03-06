@@ -165,6 +165,34 @@ def set_device_away_status(ctx, device_id, **kwargs):
     session.set_device_away_status(device["dev_id"], kwargs)
 
 
+@smartbox.command(help="Show device power_limit")
+@click.pass_context
+def device_power_limit(ctx):
+    session = ctx.obj["session"]
+    devices = session.get_devices()
+
+    for device in devices:
+        print(f"{device['name']} (dev_id: {device['dev_id']})")
+        device_power_limit = session.get_device_power_limit(device["dev_id"])
+        _pretty_print(device_power_limit)
+
+
+@smartbox.command(
+    help="Set device power_limit (pass settings as extra args, e.g. mode=auto)"
+)
+@click.option(
+    "-d", "--device-id", required=True, help="Device ID to set power_limit on"
+)
+@click.argument("power-limit", type=int)
+@click.pass_context
+def set_device_power_limit(ctx, device_id, power_limit):
+    session = ctx.obj["session"]
+    devices = session.get_devices()
+    device = next(d for d in devices if d["dev_id"] == device_id)
+
+    session.set_device_power_limit(device["dev_id"], power_limit)
+
+
 @smartbox.command(help="Open socket.io connection to device.")
 @click.option("-d", "--device-id", required=True, help="Device ID to open socket for")
 @click.pass_context

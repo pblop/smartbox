@@ -101,6 +101,11 @@ _TEST_AWAY_STATUS = {
     },
 }
 
+_TEST_POWER_LIMIT = {
+    _TEST_DEV_1: {"power_limit": "0"},
+    _TEST_DEV_2: {"power_limit": "2100"},
+}
+
 _AUTH_ARGS = [
     "-a",
     _TEST_API_NAME,
@@ -125,6 +130,7 @@ def mock_session(mocker):
     ]
     session.get_setup = lambda dev_id, node: _TEST_NODE_SETUP[dev_id][node["addr"] - 1]
     session.get_device_away_status = lambda dev_id: _TEST_AWAY_STATUS[dev_id]
+    session.get_device_power_limit = lambda dev_id: _TEST_POWER_LIMIT[dev_id]
     with patch("smartbox.cmd.Session", autospec=True, return_value=session):
         yield session
 
@@ -260,6 +266,32 @@ def test_set_device_away_status(mock_session):
     )
     assert response.exit_code == 0
     mock_session.set_device_away_status.assert_called_with(_TEST_DEV_2, test_data)
+
+
+def test_device_power_limit(mock_session):
+    response = runner.invoke(
+        smartbox.cmd.smartbox,
+        _AUTH_ARGS + ["device-power-limit"],
+    )
+    assert response.exit_code == 0
+    for dev in _TEST_DEVICES:
+        assert f"{dev['name']} (dev_id: {dev['dev_id']})" in response.output
+        data = json.dumps(
+            _TEST_POWER_LIMIT[dev["dev_id"]],
+            indent=4,
+            sort_keys=True,
+        )
+        assert data in response.output
+
+
+def test_set_device_power_limit(mock_session):
+    test_limit = 3000
+    response = runner.invoke(
+        smartbox.cmd.smartbox,
+        _AUTH_ARGS + ["set-device-power-limit", "-d", _TEST_DEV_2, str(test_limit)],
+    )
+    assert response.exit_code == 0
+    mock_session.set_device_power_limit.assert_called_with(_TEST_DEV_2, test_limit)
 
 
 def test_socket(mock_session, mock_socket_session):
