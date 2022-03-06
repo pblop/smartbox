@@ -115,7 +115,9 @@ def setup(ctx):
             _pretty_print(setup)
 
 
-@smartbox.command(help="Set node setup (pass settings as extra args, e.g. mode=auto)")
+@smartbox.command(
+    help="Set node setup (pass settings as extra args, e.g. true_radiant_enabled=true)"
+)
 @click.option(
     "-d", "--device-id", required=True, help="Device ID for node to set setup on"
 )
@@ -148,7 +150,7 @@ def device_away_status(ctx):
 
 
 @smartbox.command(
-    help="Set device away_status (pass settings as extra args, e.g. mode=auto)"
+    help="Set device away_status (pass settings as extra args, e.g. away=true)"
 )
 @click.option(
     "-d", "--device-id", required=True, help="Device ID to set away_status on"
@@ -177,9 +179,7 @@ def device_power_limit(ctx):
         _pretty_print(device_power_limit)
 
 
-@smartbox.command(
-    help="Set device power_limit (pass settings as extra args, e.g. mode=auto)"
-)
+@smartbox.command(help="Set device power_limit")
 @click.option(
     "-d", "--device-id", required=True, help="Device ID to set power_limit on"
 )
