@@ -4,4 +4,5 @@ __pycache__
 .direnv
 .eggs/
 *.egg-info
+/result
 .tox
