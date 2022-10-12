@@ -160,7 +160,7 @@ class SocketSession(object):
                     )
                 except socketio.exceptions.ConnectionError:
                     remaining = self._reconnect_attempts - attempt - 1
-                    sleep_time = self._backoff_factor * (2 ** attempt)
+                    sleep_time = self._backoff_factor * (2**attempt)
                     _LOGGER.error(
                         "Received error on connection attempt"
                         f", {remaining} retries remaining"

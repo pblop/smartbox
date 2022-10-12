@@ -23,7 +23,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         # unpin black when nixpkgs upgrades
-        pip install black==21.12b0 flake8 tox
+        pip install black flake8 tox
     - name: Checks
       run: scripts/pre-commit-check.sh
     - name: Run Tox
