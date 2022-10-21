@@ -27,6 +27,11 @@
       packages = with pkgs; [
         black
       ];
+      # Work around version check warning
+      # https://github.com/pypa/pip/issues/11309
+      shellHook = ''
+        export PIP_DISABLE_PIP_VERSION_CHECK=true
+      '';
     };
   };
 }
