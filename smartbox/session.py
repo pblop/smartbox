@@ -203,6 +203,4 @@ class Session(object):
 
     def set_device_power_limit(self, device_id: str, power_limit: int) -> None:
         data = {"power_limit": str(power_limit)}
-        resp = self._api_post(
-            data=data, path=f"devs/{device_id}/htr_system/power_limit"
-        )
+        self._api_post(data=data, path=f"devs/{device_id}/htr_system/power_limit")
