@@ -26,6 +26,8 @@
       ];
       packages = with pkgs; [
         black
+        python3Packages.types-requests
+        mypy
       ];
       # Work around version check warning
       # https://github.com/pypa/pip/issues/11309
