@@ -26,6 +26,8 @@
       ];
       packages = with pkgs; [
         black
+        # TODO: move to nur expr
+        python3Packages.jq
         python3Packages.types-requests
         mypy
       ];

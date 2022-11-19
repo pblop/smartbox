@@ -190,3 +190,7 @@ class SocketSession(object):
         self._loop_should_exit = True
         await self._sio.disconnect()
         self._ping_task.cancel()
+
+    @property
+    def namespace(self):
+        return self._api_v2_ns

@@ -6,16 +6,16 @@ import socketio
 
 from smartbox import SocketSession
 
+from const import MOCK_ACCESS_TOKEN, MOCK_DEV_ID
+
 _MOCK_API_NAME = "myapi"
 _MOCK_BASIC_AUTH_CREDS = "sldjfls93r2lkj"
 _MOCK_USERNAME = "xxxxx"
 _MOCK_PASSWORD = "yyyyy"
 _MOCK_TOKEN_TYPE = "bearer"
-_MOCK_ACCESS_TOKEN = "sj32oj2lkwjf"
 _MOCK_ACCESS_TOKEN_2 = "j323jf3202"
 _MOCK_REFRESH_TOKEN = "23ij2oij324j3423"
 _MOCK_EXPIRES_IN = 14400
-_MOCK_DEV_ID = "02j3rjjf"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,13 +139,6 @@ class MockServer(object):
         await self._sio.disconnect(self._sid)
 
 
-@pytest.fixture
-def mock_session(mocker):
-    session = mocker.MagicMock()
-    session._access_token = _MOCK_ACCESS_TOKEN
-    return session
-
-
 @pytest.mark.asyncio
 async def test_basic(mock_session, unused_tcp_port):
     got_dev_data = asyncio.Event()
@@ -175,7 +168,7 @@ async def test_basic(mock_session, unused_tcp_port):
     mock_session._api_host = f"http://localhost:{unused_tcp_port}"
     socket_session = SocketSession(
         mock_session,
-        _MOCK_DEV_ID,
+        MOCK_DEV_ID,
         dev_data_cb,
         update_cb,
         add_sigint_handler=True,
@@ -187,8 +180,8 @@ async def test_basic(mock_session, unused_tcp_port):
     assert dev_data == _TEST_DEV_DATA
 
     # check we connected with the right query string
-    assert f"token={_MOCK_ACCESS_TOKEN}" in mock_server.query_string.split("&")
-    assert f"dev_id={_MOCK_DEV_ID}" in mock_server.query_string.split("&")
+    assert f"token={MOCK_ACCESS_TOKEN}" in mock_server.query_string.split("&")
+    assert f"dev_id={MOCK_DEV_ID}" in mock_server.query_string.split("&")
 
     await got_update.wait()
     assert update_data == _TEST_UPDATE_2
@@ -220,7 +213,7 @@ async def test_reconnect(mock_session, unused_tcp_port):
     mock_session._api_host = f"http://localhost:{unused_tcp_port}"
     socket_session = SocketSession(
         mock_session,
-        _MOCK_DEV_ID,
+        MOCK_DEV_ID,
         dev_data_cb,
         update_cb,
         add_sigint_handler=True,
@@ -232,7 +225,7 @@ async def test_reconnect(mock_session, unused_tcp_port):
     test_connected.clear()
 
     # check we connected with the right access_token
-    assert f"token={_MOCK_ACCESS_TOKEN}" in mock_server.query_string.split("&")
+    assert f"token={MOCK_ACCESS_TOKEN}" in mock_server.query_string.split("&")
 
     await got_update.wait()
     got_update.clear()
@@ -295,7 +288,7 @@ async def test_connect_retry_success(mock_session, mocker):
     mocker.patch("socketio.AsyncClient", return_value=mock_async_client)
     socket_session = SocketSession(
         mock_session,
-        _MOCK_DEV_ID,
+        MOCK_DEV_ID,
         add_sigint_handler=True,
     )
 
@@ -331,7 +324,7 @@ async def test_connect_retry_failure(mock_session, mocker):
     mocker.patch("socketio.AsyncClient", return_value=mock_async_client)
     socket_session = SocketSession(
         mock_session,
-        _MOCK_DEV_ID,
+        MOCK_DEV_ID,
         add_sigint_handler=True,
     )
 
