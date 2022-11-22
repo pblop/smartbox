@@ -3,4 +3,4 @@ import smartbox
 
 
 def test_version():
-    assert re.match(r"^[0-9\.]+$", smartbox.__version__)
+    assert re.match(r"^[0-9\.]+(-[a-z0-9\.]+)?$", smartbox.__version__)
