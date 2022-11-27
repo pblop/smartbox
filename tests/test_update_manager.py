@@ -74,7 +74,7 @@ async def test_integration(mocker, mock_session, caplog):
 
         dev_data = {
             "away_status": {"away": True},
-            "htr_system": {"setup": {"power_limit": 0}},
+            "htr_system": {"setup": {"power_limit": "0"}},
         }
         updates = [
             {"path": "/htr/1/status", "body": {"active": True, "mtemp": 22.5}},
@@ -135,7 +135,7 @@ async def test_integration(mocker, mock_session, caplog):
         # dev data
         dev_data_sub.assert_called_with(dev_data)
         away_status_sub.assert_called_with({"away": True})
-        power_limit_sub.assert_called_with(0)
+        power_limit_sub.assert_called_with("0")
         unmatched_sub.assert_not_called()
 
         # updates
@@ -147,7 +147,10 @@ async def test_integration(mocker, mock_session, caplog):
 
         # specific functions
         away_status_specific_sub.assert_called_with({"away": True})
+        assert isinstance(away_status_specific_sub.call_args[0][0]["away"], bool)
         node_status_specific_sub.assert_called_with("htr", 1, updates[0]["body"])
+        power_limit_specific_sub.assert_called_with(0)
+        assert isinstance(power_limit_specific_sub.call_args[0][0], float)
 
         # Make sure we logged about the unknown update
         assert (
@@ -159,11 +162,12 @@ async def test_integration(mocker, mock_session, caplog):
         async def run_second_update() -> None:
             await _socket_update(
                 update_manager,
-                {"path": "/htr_system/power_limit", "body": {"power_limit": 500}},
+                {"path": "/htr_system/power_limit", "body": {"power_limit": "500"}},
             )
 
         mock_socket_run.side_effect = run_second_update
         await update_manager.run()
         mock_socket_run.assert_awaited()
-        power_limit_update_sub.assert_called_with(500)
+        power_limit_update_sub.assert_called_with("500")
         power_limit_specific_sub.assert_called_with(500)
+        assert isinstance(power_limit_specific_sub.call_args[0][0], float)
