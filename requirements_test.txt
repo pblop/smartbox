@@ -2,6 +2,7 @@ coverage
 freezegun
 pytest
 pytest-asyncio
+pytest-benchmark
 pytest-cov
 pytest-flake8
 pytest-mock

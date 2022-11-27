@@ -1,34 +1,55 @@
 """Smartbox socket update manager."""
 
-from dataclasses import dataclass
 import jq
 import logging
 import re
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, Iterable, List
 
 from .session import Session
 from .socket import SocketSession
 
 _LOGGER = logging.getLogger(__name__)
 
+_SIMPLE_JQ_RE = re.compile(r"^\.(\w+)$")
 
-class DevDataSubscription:
+
+class OptimisedJQMatcher(object):
+    """jq matcher that doesn't bother with jq for simple one-level element queries."""
+
+    def __init__(self, jq_expr: str):
+        """Create an OptimisedJQMatcher for any jq expression."""
+        m = _SIMPLE_JQ_RE.match(jq_expr)
+        self._fast_path = False
+        if m:
+            self._fast_path = True
+            self._simple_elem = m.group(1)
+        else:
+            self._compiled_jq = jq.compile(jq_expr)
+
+    def match(self, input_data: Dict[str, Any]) -> Iterable:
+        """Return matches for the given dev data."""
+        if self._fast_path:
+            return [input_data.get(self._simple_elem)]
+        else:
+            return self._compiled_jq.input(input_data)
+
+
+class DevDataSubscription(object):
     """Subscription for dev data callbacks."""
 
     def __init__(self, jq_expr: str, callback: Callable[[Dict[str, Any]], None]):
         """Create a dev data subscription for the given jq expression."""
-        self._compiled_jq = jq.compile(jq_expr)
+        self._jq_matcher = OptimisedJQMatcher(jq_expr)
         self._callback = callback
 
     def match(self, input_data: Dict[str, Any]) -> None:
         """Return matches for this subscription for the given dev data."""
-        for match in self._compiled_jq.input(input_data):
+        for match in self._jq_matcher.match(input_data):
             if match is not None:
                 self._callback(match)
 
 
-@dataclass
-class UpdateSubscription:
+class UpdateSubscription(object):
     """Subscription for updates."""
 
     def __init__(
@@ -36,7 +57,7 @@ class UpdateSubscription:
     ):
         """Create an update subscription for the given path regex and body jq expression."""
         self._path_regex = re.compile(path_regex)
-        self._compiled_jq = jq.compile(jq_expr)
+        self._jq_matcher = OptimisedJQMatcher(jq_expr)
         self._callback = callback
 
     def match(self, input_data: Dict[str, Any]) -> bool:
@@ -46,7 +67,7 @@ class UpdateSubscription:
             return False
         path_match_kwargs = path_match.groupdict()
         matched = False
-        for data_match in self._compiled_jq.input(input_data):
+        for data_match in self._jq_matcher.match(input_data):
             if data_match is not None:
                 matched = True
                 self._callback(data_match, **path_match_kwargs)

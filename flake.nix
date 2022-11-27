@@ -35,6 +35,8 @@
       packages = with pkgs; [
         black
         mypy
+        py-spy
+        python3Packages.flake8
       ];
       # Work around version check warning
       # https://github.com/pypa/pip/issues/11309
