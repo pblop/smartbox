@@ -2,9 +2,61 @@ import logging
 from typing import Any, Dict
 from unittest.mock import patch
 
-from smartbox import UpdateManager
+from smartbox.update_manager import (
+    DevDataSubscription,
+    UpdateManager,
+    UpdateSubscription,
+)
 
 from const import MOCK_DEV_ID
+
+
+def test_dev_data_subscription():
+    result = []
+
+    def callback(data):
+        result.append(data)
+
+    sub = DevDataSubscription(".foo", callback)
+    sub.match({"foo": "bar"})
+    assert result == ["bar"]
+
+    result = []
+    sub.match({"fooboo": "bar"})
+    assert result == []
+
+    # multiple
+    sub2 = DevDataSubscription(".foo[1]", callback)
+    result = []
+    sub2.match({"foo": ["bar", "baz"]})
+    assert result == ["baz"]
+
+
+def test_update_subscription():
+    result = []
+
+    def callback(data):
+        result.append(data)
+
+    sub = UpdateSubscription("^/foo", ".body.foo", callback)
+    sub.match({"path": "/foo", "body": {"foo": "bar"}})
+    assert result == ["bar"]
+
+    # jq mismatch
+    result = []
+    sub.match({"path": "/foo", "body": {"fooboo": "bar"}})
+    assert result == []
+
+    # path mismatch
+    result = []
+    sub.match({"path": "/bar", "body": {"foo": "bar"}})
+    assert result == []
+
+    # multiple
+    sub2 = UpdateSubscription("^/foo", ".body.foo[1]", callback)
+    result = []
+    sub2.match({"path": "/foo", "body": {"foo": ["bar", "baz"]}})
+    assert result == ["baz"]
 
 
 async def _socket_dev_data(update_manager: UpdateManager, data: Dict[str, Any]) -> None:
@@ -15,7 +67,7 @@ async def _socket_update(update_manager: UpdateManager, data: Dict[str, Any]) ->
     await update_manager.socket_session.namespace.on_update(data)
 
 
-async def test_basic(mocker, mock_session, caplog):
+async def test_integration(mocker, mock_session, caplog):
     caplog.set_level(logging.DEBUG)
     with patch("smartbox.update_manager.SocketSession.run") as mock_socket_run:
         update_manager = UpdateManager(mock_session, MOCK_DEV_ID)

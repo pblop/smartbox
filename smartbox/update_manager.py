@@ -12,21 +12,45 @@ from .socket import SocketSession
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
 class DevDataSubscription:
     """Subscription for dev data callbacks."""
 
-    compiled_jq: Any
-    callback: Callable
+    def __init__(self, jq_expr: str, callback: Callable[[Dict[str, Any]], None]):
+        """Create a dev data subscription for the given jq expression."""
+        self._compiled_jq = jq.compile(jq_expr)
+        self._callback = callback
+
+    def match(self, input_data: Dict[str, Any]) -> None:
+        """Return matches for this subscription for the given dev data."""
+        for match in self._compiled_jq.input(input_data):
+            if match is not None:
+                self._callback(match)
 
 
 @dataclass
 class UpdateSubscription:
     """Subscription for updates."""
 
-    path_regex: Any
-    compiled_jq: Any
-    callback: Callable
+    def __init__(
+        self, path_regex: str, jq_expr: str, callback: Callable[[Dict[str, Any]], None]
+    ):
+        """Create an update subscription for the given path regex and body jq expression."""
+        self._path_regex = re.compile(path_regex)
+        self._compiled_jq = jq.compile(jq_expr)
+        self._callback = callback
+
+    def match(self, input_data: Dict[str, Any]) -> bool:
+        """Return matches for this subscription for the given update."""
+        path_match = self._path_regex.search(input_data["path"])
+        if not path_match:
+            return False
+        path_match_kwargs = path_match.groupdict()
+        matched = False
+        for data_match in self._compiled_jq.input(input_data):
+            if data_match is not None:
+                matched = True
+                self._callback(data_match, **path_match_kwargs)
+        return matched
 
 
 class UpdateManager(object):
@@ -51,7 +75,7 @@ class UpdateManager(object):
 
     def subscribe_to_dev_data(self, jq_expr: str, callback: Callable) -> None:
         """Subscribe to receive device data."""
-        sub = DevDataSubscription(compiled_jq=jq.compile(jq_expr), callback=callback)
+        sub = DevDataSubscription(jq_expr, callback)
         self._dev_data_subscriptions.append(sub)
 
     def subscribe_to_updates(
@@ -61,11 +85,7 @@ class UpdateManager(object):
 
         Named groups in path_regex are passed as kwargs to callback.
         """
-        sub = UpdateSubscription(
-            path_regex=re.compile(path_regex),
-            compiled_jq=jq.compile(jq_expr),
-            callback=callback,
-        )
+        sub = UpdateSubscription(path_regex, jq_expr, callback)
         self._update_subscriptions.append(sub)
 
     def subscribe_to_device_away_status(
@@ -97,9 +117,7 @@ class UpdateManager(object):
 
     def _dev_data_cb(self, data: Dict[str, Any]) -> None:
         for sub in self._dev_data_subscriptions:
-            for match in sub.compiled_jq.input(data):
-                if match is not None:
-                    sub.callback(match)
+            sub.match(data)
 
     def _update_cb(self, data: Dict[str, Any]) -> None:
         matched = False
@@ -107,13 +125,7 @@ class UpdateManager(object):
             if "path" not in data:
                 _LOGGER.error("Path not found in update data: %s", data)
                 continue
-            path_match = sub.path_regex.search(data["path"])
-            if not path_match:
-                continue
-            path_match_kwargs = path_match.groupdict()
-            for data_match in sub.compiled_jq.input(data):
-                if data_match is not None:
-                    matched = True
-                    sub.callback(data_match, **path_match_kwargs)
+            if sub.match(data):
+                matched = True
         if not matched:
             _LOGGER.debug("No matches for update %s", data)
