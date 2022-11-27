@@ -24,8 +24,6 @@
       python = pkgs.nur.repos.graham33.home-assistant.python;
       smartbox = python.pkgs.smartbox.overridePythonAttrs (o: {
         propagatedBuildInputs = (o.propagatedBuildInputs or []) ++ (with python.pkgs; [
-          # TODO: move to NUR
-          pytest-benchmark
         ]);
       });
     in pkgs.mkShell {
