@@ -20,9 +20,17 @@
       ];
     };
   in {
-    devShells.${system}.default = pkgs.mkShell {
+    devShells.${system}.default = let
+      python = pkgs.nur.repos.graham33.home-assistant.python;
+      smartbox = python.pkgs.smartbox.overridePythonAttrs (o: {
+        propagatedBuildInputs = (o.propagatedBuildInputs or []) ++ (with python.pkgs; [
+          # TODO: move to NUR
+          pytest-benchmark
+        ]);
+      });
+    in pkgs.mkShell {
       inputsFrom = [
-        pkgs.nur.repos.graham33.home-assistant.python.pkgs.smartbox
+        smartbox
       ];
       packages = with pkgs; [
         black
