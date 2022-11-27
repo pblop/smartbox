@@ -79,7 +79,6 @@ async def test_integration(mocker, mock_session, caplog):
         updates = [
             {"path": "/htr/1/status", "body": {"active": True, "mtemp": 22.5}},
             {"path": "/mgr/away_status", "body": {"away": True}},
-            {"path": "/htr_system/setup", "body": {"power_limit": 1000}},
             {"path": "/htr_system/unknown_thing", "body": {"blah": "foo"}},
         ]
 
@@ -144,11 +143,10 @@ async def test_integration(mocker, mock_session, caplog):
             updates[0]["body"], node_type="htr", addr="1"
         )
         away_status_update_sub.assert_called_with(True)
-        power_limit_update_sub.assert_called_with(1000)
+        power_limit_update_sub.assert_not_called()
 
         # specific functions
         away_status_specific_sub.assert_called_with({"away": True})
-        power_limit_specific_sub.assert_called_with(1000)
         node_status_specific_sub.assert_called_with("htr", 1, updates[0]["body"])
 
         # Make sure we logged about the unknown update

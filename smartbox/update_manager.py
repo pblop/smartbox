@@ -118,6 +118,7 @@ class UpdateManager(object):
 
     def subscribe_to_device_power_limit(self, callback: Callable[[int], None]) -> None:
         """Subscribe to device power limit updates."""
+        self.subscribe_to_dev_data(".htr_system.setup.power_limit", callback)
         self.subscribe_to_updates(
             r"^/htr_system/(setup|power_limit)",
             ".body.power_limit",
