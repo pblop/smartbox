@@ -150,7 +150,7 @@ async def test_integration(mocker, mock_session, caplog):
         assert isinstance(away_status_specific_sub.call_args[0][0]["away"], bool)
         node_status_specific_sub.assert_called_with("htr", 1, updates[0]["body"])
         power_limit_specific_sub.assert_called_with(0)
-        assert isinstance(power_limit_specific_sub.call_args[0][0], float)
+        assert isinstance(power_limit_specific_sub.call_args[0][0], int)
 
         # Make sure we logged about the unknown update
         assert (
@@ -170,4 +170,4 @@ async def test_integration(mocker, mock_session, caplog):
         mock_socket_run.assert_awaited()
         power_limit_update_sub.assert_called_with("500")
         power_limit_specific_sub.assert_called_with(500)
-        assert isinstance(power_limit_specific_sub.call_args[0][0], float)
+        assert isinstance(power_limit_specific_sub.call_args[0][0], int)

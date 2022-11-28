@@ -116,17 +116,15 @@ class UpdateManager(object):
         self.subscribe_to_dev_data(".away_status", callback)
         self.subscribe_to_updates(r"^/mgr/away_status", ".body", callback)
 
-    def subscribe_to_device_power_limit(
-        self, callback: Callable[[float], None]
-    ) -> None:
+    def subscribe_to_device_power_limit(self, callback: Callable[[int], None]) -> None:
         """Subscribe to device power limit updates."""
         self.subscribe_to_dev_data(
-            ".htr_system.setup.power_limit", lambda p: callback(float(p))
+            ".htr_system.setup.power_limit", lambda p: callback(int(p))
         )
         self.subscribe_to_updates(
             r"^/htr_system/(setup|power_limit)",
             ".body.power_limit",
-            lambda p: callback(float(p)),
+            lambda p: callback(int(p)),
         )
 
     def subscribe_to_node_status(
