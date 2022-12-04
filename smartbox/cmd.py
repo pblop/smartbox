@@ -115,19 +115,18 @@ def setup(ctx):
             _pretty_print(setup)
 
 
-@smartbox.command(
-    help="Set node setup options"
-)
+@smartbox.command(help="Set node setup options")
 @click.option(
     "-d", "--device-id", required=True, help="Device ID for node to set setup on"
 )
 @click.option(
     "-n", "--node-addr", type=int, required=True, help="Address of node to set setup on"
 )
-@click.option("--true-radiant-enabled", type=bool)
-@click.option("--window-mode-enabled", type=bool, default=None)
 @click.option("--control-mode", type=int, default=None)
 @click.option("--offset", type=str, default=None)
+@click.option("--true-radiant-enabled", type=bool, default=None)
+@click.option("--units", type=str, default=None)
+@click.option("--window-mode-enabled", type=bool, default=None)
 @click.pass_context
 def set_setup(ctx, device_id, node_addr, **kwargs):
     session = ctx.obj["session"]
