@@ -127,7 +127,7 @@ def setup(ctx):
 @click.option("--true-radiant-enabled", type=bool)
 @click.option("--window-mode-enabled", type=bool, default=None)
 @click.option("--control-mode", type=int, default=None)
-# TODO: other options
+@click.option("--offset", type=str, default=None)
 @click.pass_context
 def set_setup(ctx, device_id, node_addr, **kwargs):
     session = ctx.obj["session"]
