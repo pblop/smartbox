@@ -33,6 +33,18 @@ class OptimisedJQMatcher(object):
         else:
             return self._compiled_jq.input(input_data)
 
+    def __repr__(self) -> str:
+        if self._fast_path:
+            return str(self)
+        else:
+            return repr(self._compiled_jq)
+
+    def __str__(self) -> str:
+        if self._fast_path:
+            return f"OptimisedJQMatcher('.{self._simple_elem}', fast_path=True)"
+        else:
+            return str(self._compiled_jq)
+
 
 class DevDataSubscription(object):
     """Subscription for dev data callbacks."""
@@ -44,6 +56,7 @@ class DevDataSubscription(object):
 
     def match(self, input_data: Dict[str, Any]) -> None:
         """Return matches for this subscription for the given dev data."""
+        _LOGGER.debug("Matching jq %s", self._jq_matcher)
         try:
             for match in self._jq_matcher.match(input_data):
                 if match is not None:
@@ -70,6 +83,7 @@ class UpdateSubscription(object):
             return False
         path_match_kwargs = path_match.groupdict()
         matched = False
+        _LOGGER.debug("Matching jq %s", self._jq_matcher)
         try:
             for data_match in self._jq_matcher.match(input_data):
                 if data_match is not None:

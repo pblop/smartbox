@@ -4,11 +4,22 @@ from unittest.mock import patch
 
 from smartbox.update_manager import (
     DevDataSubscription,
+    OptimisedJQMatcher,
     UpdateManager,
     UpdateSubscription,
 )
 
 from const import MOCK_DEV_ID
+
+
+def test_optimised_jq_matcher():
+    matcher = OptimisedJQMatcher(".foo")
+    assert repr(matcher) == "OptimisedJQMatcher('.foo', fast_path=True)"
+    assert str(matcher) == "OptimisedJQMatcher('.foo', fast_path=True)"
+
+    matcher = OptimisedJQMatcher(".foo[1]")
+    assert repr(matcher) == "jq.compile('.foo[1]')"
+    assert str(matcher) == "jq.compile('.foo[1]')"
 
 
 def test_dev_data_subscription():
