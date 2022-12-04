@@ -124,6 +124,7 @@ def setup(ctx):
 )
 @click.option("--control-mode", type=int, default=None)
 @click.option("--offset", type=str, default=None)
+@click.option("--priority", type=str, default=None)
 @click.option("--true-radiant-enabled", type=bool, default=None)
 @click.option("--units", type=str, default=None)
 @click.option("--window-mode-enabled", type=bool, default=None)

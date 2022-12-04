@@ -241,6 +241,19 @@ def test_set_setup_control_mode(mock_session):
     )
 
 
+def test_set_setup_priority(mock_session):
+    test_data = {"priority": "0.5"}
+    test_args = _convert_kwargs_to_cmdline_args(test_data)
+    response = runner.invoke(
+        smartbox.cmd.smartbox,
+        _AUTH_ARGS + ["set-setup", "-d", _TEST_DEV_2, "-n", 2] + test_args,
+    )
+    assert response.exit_code == 0
+    mock_session.set_setup.assert_called_with(
+        _TEST_DEV_2, _TEST_NODES[_TEST_DEV_2][1], test_data
+    )
+
+
 def test_set_setup_offset(mock_session):
     test_data = {"offset": "0.5"}
     test_args = _convert_kwargs_to_cmdline_args(test_data)
