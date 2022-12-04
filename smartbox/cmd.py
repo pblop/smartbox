@@ -116,7 +116,7 @@ def setup(ctx):
 
 
 @smartbox.command(
-    help="Set node setup (pass settings as extra args, e.g. true_radiant_enabled=true)"
+    help="Set node setup options"
 )
 @click.option(
     "-d", "--device-id", required=True, help="Device ID for node to set setup on"
