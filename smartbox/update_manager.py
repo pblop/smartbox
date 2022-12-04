@@ -44,9 +44,12 @@ class DevDataSubscription(object):
 
     def match(self, input_data: Dict[str, Any]) -> None:
         """Return matches for this subscription for the given dev data."""
-        for match in self._jq_matcher.match(input_data):
-            if match is not None:
-                self._callback(match)
+        try:
+            for match in self._jq_matcher.match(input_data):
+                if match is not None:
+                    self._callback(match)
+        except ValueError:
+            _LOGGER.exception("Error evaluating jq on dev data %s", input_data)
 
 
 class UpdateSubscription(object):
@@ -67,10 +70,13 @@ class UpdateSubscription(object):
             return False
         path_match_kwargs = path_match.groupdict()
         matched = False
-        for data_match in self._jq_matcher.match(input_data):
-            if data_match is not None:
-                matched = True
-                self._callback(data_match, **path_match_kwargs)
+        try:
+            for data_match in self._jq_matcher.match(input_data):
+                if data_match is not None:
+                    matched = True
+                    self._callback(data_match, **path_match_kwargs)
+        except ValueError:
+            _LOGGER.exception("Error evaluating jq on update %s", input_data)
         return matched
 
 
