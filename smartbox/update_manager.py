@@ -155,7 +155,9 @@ class UpdateManager(object):
         def dev_data_wrapper(data: Dict[str, Any]) -> None:
             callback(data["type"], int(data["addr"]), data["status"]),
 
-        self.subscribe_to_dev_data(".nodes[] | {addr, type, status}", dev_data_wrapper)
+        self.subscribe_to_dev_data(
+            "(.nodes[] | {addr, type, status})?", dev_data_wrapper
+        )
 
         def update_wrapper(data: Dict[str, Any], node_type: str, addr: str) -> None:
             callback(node_type, int(addr), data),
@@ -172,7 +174,9 @@ class UpdateManager(object):
         def dev_data_wrapper(data: Dict[str, Any]) -> None:
             callback(data["type"], int(data["addr"]), data["setup"]),
 
-        self.subscribe_to_dev_data(".nodes[] | {addr, type, setup}", dev_data_wrapper)
+        self.subscribe_to_dev_data(
+            "(.nodes[] | {addr, type, setup})?", dev_data_wrapper
+        )
 
         def update_wrapper(data: Dict[str, Any], node_type: str, addr: str) -> None:
             callback(node_type, int(addr), data),

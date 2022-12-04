@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Dict
+import re
+from typing import Any, Dict, List
 from unittest.mock import patch
 
 from smartbox.update_manager import (
@@ -22,7 +23,7 @@ def test_optimised_jq_matcher():
     assert str(matcher) == "jq.compile('.foo[1]')"
 
 
-def test_dev_data_subscription():
+def test_dev_data_subscription(caplog):
     result = []
 
     def callback(data):
@@ -42,8 +43,27 @@ def test_dev_data_subscription():
     sub2.match({"foo": ["bar", "baz"]})
     assert result == ["baz"]
 
+    # invalid
+    sub3 = DevDataSubscription(".foo[]", callback)
+    result = []
+    sub3.match({"bar": []})
 
-def test_update_subscription():
+    _assert_log_message(
+        "smartbox.update_manager",
+        logging.ERROR,
+        "Error evaluating jq on dev data",
+        caplog.record_tuples,
+    )
+
+
+def _assert_log_message(name: str, level: int, msg_regex: str, record_tuples: List):
+    assert any(
+        (name == n and level == l and re.search(msg_regex, msg))
+        for n, l, msg in record_tuples
+    )
+
+
+def test_update_subscription(caplog):
     result = []
 
     def callback(data):
@@ -68,6 +88,18 @@ def test_update_subscription():
     result = []
     sub2.match({"path": "/foo", "body": {"foo": ["bar", "baz"]}})
     assert result == ["baz"]
+
+    # invalid
+    sub3 = UpdateSubscription("^/foo", ".body.foo[]", callback)
+    result = []
+    sub3.match({"path": "/foo", "body": {"bar": []}})
+
+    _assert_log_message(
+        "smartbox.update_manager",
+        logging.ERROR,
+        "Error evaluating jq on update",
+        caplog.record_tuples,
+    )
 
 
 async def _socket_dev_data(update_manager: UpdateManager, data: Dict[str, Any]) -> None:
