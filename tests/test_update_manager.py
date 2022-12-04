@@ -76,7 +76,12 @@ async def test_integration(mocker, mock_session, caplog):
             "away_status": {"away": False},
             "htr_system": {"setup": {"power_limit": "0"}},
             "nodes": [
-                {"addr": 1, "type": "htr", "status": {"active": True, "mtemp": 22.0}}
+                {
+                    "addr": 1,
+                    "type": "htr",
+                    "status": {"active": True, "mtemp": 22.0},
+                    "setup": {"window_mode_enabled": False},
+                }
             ],
         }
         updates = [
@@ -84,6 +89,7 @@ async def test_integration(mocker, mock_session, caplog):
             {"path": "/mgr/away_status", "body": {"away": True}},
             {"path": "/htr_system/power_limit", "body": {"power_limit": "1000"}},
             {"path": "/htr_system/unknown_thing", "body": {"blah": "foo"}},
+            {"path": "/htr/1/setup", "body": {"window_mode_enabled": True}},
         ]
 
         # dev data
@@ -125,6 +131,8 @@ async def test_integration(mocker, mock_session, caplog):
         update_manager.subscribe_to_device_power_limit(power_limit_specific_sub)
         node_status_specific_sub = mocker.MagicMock()
         update_manager.subscribe_to_node_status(node_status_specific_sub)
+        node_setup_specific_sub = mocker.MagicMock()
+        update_manager.subscribe_to_node_setup(node_setup_specific_sub)
 
         # dev data
         async def send_dev_data() -> None:
@@ -143,6 +151,9 @@ async def test_integration(mocker, mock_session, caplog):
             "htr", 1, dev_data["nodes"][0]["status"]
         )
         power_limit_specific_sub.assert_called_with(0)
+        node_setup_specific_sub.assert_called_with(
+            "htr", 1, {"window_mode_enabled": False}
+        )
 
         async def run_first_updates() -> None:
             for update in updates:
@@ -157,6 +168,9 @@ async def test_integration(mocker, mock_session, caplog):
         )
         away_status_update_sub.assert_called_with(True)
         power_limit_update_sub.assert_called_with("1000")
+        node_setup_specific_sub.assert_called_with(
+            "htr", 1, {"window_mode_enabled": True}
+        )
 
         away_status_specific_sub.assert_called_with({"away": True})
         assert isinstance(away_status_specific_sub.call_args[0][0]["away"], bool)
