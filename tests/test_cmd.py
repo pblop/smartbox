@@ -220,13 +220,30 @@ def test_setup(mock_session):
             assert data in response.output
 
 
-def test_set_setup(mock_session):
-    test_data = {"true_radiant_enabled": True}
-    test_args = list(
+def _convert_kwargs_to_cmdline_args(kwargs):
+    return list(
         itertools.chain(
-            *{f"--{k.replace('_', '-')}": v for k, v in test_data.items()}.items()
+            *{f"--{k.replace('_', '-')}": v for k, v in kwargs.items()}.items()
         )
     )
+
+
+def test_set_setup_true_radiant(mock_session):
+    test_data = {"true_radiant_enabled": True}
+    test_args = _convert_kwargs_to_cmdline_args(test_data)
+    response = runner.invoke(
+        smartbox.cmd.smartbox,
+        _AUTH_ARGS + ["set-setup", "-d", _TEST_DEV_2, "-n", 2] + test_args,
+    )
+    assert response.exit_code == 0
+    mock_session.set_setup.assert_called_with(
+        _TEST_DEV_2, _TEST_NODES[_TEST_DEV_2][1], test_data
+    )
+
+
+def test_set_setup_window_mode(mock_session):
+    test_data = {"window_mode_enabled": True}
+    test_args = _convert_kwargs_to_cmdline_args(test_data)
     response = runner.invoke(
         smartbox.cmd.smartbox,
         _AUTH_ARGS + ["set-setup", "-d", _TEST_DEV_2, "-n", 2] + test_args,
