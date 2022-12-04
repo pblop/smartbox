@@ -132,11 +132,16 @@ class UpdateManager(object):
     ) -> None:
         """Subscribe to node status updates."""
 
-        def wrapper(data: Dict[str, Any], node_type: str, addr: str) -> None:
+        def dev_data_wrapper(data: Dict[str, Any]) -> None:
+            callback(data["type"], int(data["addr"]), data["status"]),
+
+        self.subscribe_to_dev_data(".nodes[] | {addr, type, status}", dev_data_wrapper)
+
+        def update_wrapper(data: Dict[str, Any], node_type: str, addr: str) -> None:
             callback(node_type, int(addr), data),
 
         self.subscribe_to_updates(
-            r"^/(?P<node_type>[^/]+)/(?P<addr>\d+)/status", ".body", wrapper
+            r"^/(?P<node_type>[^/]+)/(?P<addr>\d+)/status", ".body", update_wrapper
         )
 
     def _dev_data_cb(self, data: Dict[str, Any]) -> None:
