@@ -126,6 +126,7 @@ def setup(ctx):
 )
 @click.option("--true-radiant-enabled", type=bool)
 @click.option("--window-mode-enabled", type=bool, default=None)
+@click.option("--control-mode", type=int, default=None)
 # TODO: other options
 @click.pass_context
 def set_setup(ctx, device_id, node_addr, **kwargs):
@@ -136,7 +137,7 @@ def set_setup(ctx, device_id, node_addr, **kwargs):
     node = next(n for n in nodes if n["addr"] == node_addr)
 
     # Only pass specified options
-    setup_kwargs = {k: v for k, v in kwargs.items() if v != None}
+    setup_kwargs = {k: v for k, v in kwargs.items() if v is not None}
     session.set_setup(device["dev_id"], node, setup_kwargs)
 
 
