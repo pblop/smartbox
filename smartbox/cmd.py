@@ -27,7 +27,8 @@ def _pretty_print(data):
 def smartbox(ctx, api_name, basic_auth_creds, username, password, verbose):
     ctx.ensure_object(dict)
     logging.basicConfig(
-        format="%(asctime)s %(levelname)-8s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+        format="%(asctime)s %(levelname)-8s "
+        "[%(name)s.%(funcName)s:%(lineno)d] %(message)s",
         level=logging.DEBUG if verbose else logging.INFO,
         datefmt="%Y-%m-%d %H:%M:%S",
     )

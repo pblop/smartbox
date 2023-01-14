@@ -110,8 +110,9 @@ class SocketSession(object):
         async def connect():
             _LOGGER.debug("Received connect socket event")
             if add_sigint_handler:
-                # engineio sets a signal handler on connect, which means we have to set our
-                # own in the connect callback if we want to override it
+                # engineio sets a signal handler on connect, which means we
+                # have to set our own in the connect callback if we want to
+                # override it
                 _LOGGER.debug("Adding signal handler")
                 event_loop = asyncio.get_event_loop()
 
@@ -143,7 +144,10 @@ class SocketSession(object):
             encoded_token = urllib.parse.quote(
                 self._session._access_token, safe="~()*!.'"
             )
-            url = f"{self._session._api_host}/?token={encoded_token}&dev_id={self._device_id}"
+            url = (
+                f"{self._session._api_host}"
+                + f"/?token={encoded_token}&dev_id={self._device_id}"
+            )
 
             # Try to connect
             _LOGGER.debug(
@@ -170,8 +174,8 @@ class SocketSession(object):
                         await asyncio.sleep(sleep_time)
                     else:
                         logging.warning(
-                            f"Failed to connect after {self._reconnect_attempts} attempts"
-                            ", falling through to refresh token"
+                            f"Failed to connect after {self._reconnect_attempts}"
+                            " attempts, falling through to refresh token"
                         )
                 else:
                     _LOGGER.info(f"Successfully connected to {url}")

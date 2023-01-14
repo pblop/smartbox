@@ -58,8 +58,8 @@ def test_dev_data_subscription(caplog):
 
 def _assert_log_message(name: str, level: int, msg_regex: str, record_tuples: List):
     assert any(
-        (name == n and level == l and re.search(msg_regex, msg))
-        for n, l, msg in record_tuples
+        (name == record_name and level == record_level and re.search(msg_regex, msg))
+        for record_name, record_level, msg in record_tuples
     )
 
 
@@ -225,7 +225,8 @@ async def test_integration(mocker, mock_session, caplog):
         assert (
             "smartbox.update_manager",
             logging.DEBUG,
-            "No matches for update {'path': '/htr_system/unknown_thing', 'body': {'blah': 'foo'}}",
+            "No matches for update {'path': '/htr_system/unknown_thing',"
+            " 'body': {'blah': 'foo'}}",
         ) in caplog.record_tuples
 
         async def run_second_update() -> None:

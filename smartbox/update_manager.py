@@ -71,7 +71,8 @@ class UpdateSubscription(object):
     def __init__(
         self, path_regex: str, jq_expr: str, callback: Callable[[Dict[str, Any]], None]
     ):
-        """Create an update subscription for the given path regex and body jq expression."""
+        """Create an update subscription for the given path regex and body jq
+        expression."""
         self._path_regex = re.compile(path_regex)
         self._jq_matcher = OptimisedJQMatcher(jq_expr)
         self._callback = callback

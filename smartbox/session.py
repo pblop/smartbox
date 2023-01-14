@@ -67,8 +67,9 @@ class Session(object):
         if r["expires_in"] < _MIN_TOKEN_LIFETIME:
             _LOGGER.warning(
                 (
-                    f"Token expires in {r['expires_in']}s, which is below minimum lifetime "
-                    f"of {_MIN_TOKEN_LIFETIME}s - will refresh again on next operation"
+                    f"Token expires in {r['expires_in']}s"
+                    f", which is below minimum lifetime of {_MIN_TOKEN_LIFETIME}s"
+                    " - will refresh again on next operation"
                 )
             )
         self._expires_at = datetime.datetime.now() + datetime.timedelta(
