@@ -212,10 +212,11 @@ def socket(ctx, device_id):
         _LOGGER.info("Received update:")
         _pretty_print(data)
 
+    event_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(event_loop)
     socket_session = SocketSession(
         session, device_id, on_dev_data, on_update, verbose, add_sigint_handler=True
     )
-    event_loop = asyncio.get_event_loop()
     task = event_loop.create_task(socket_session.run())
     event_loop.run_until_complete(task)
 
