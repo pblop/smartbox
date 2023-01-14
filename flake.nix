@@ -35,6 +35,7 @@
         mypy
         py-spy
         python3Packages.flake8
+        python3Packages.tox
       ];
       # Work around version check warning
       # https://github.com/pypa/pip/issues/11309
