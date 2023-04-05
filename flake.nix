@@ -21,7 +21,8 @@
     };
   in {
     devShells.${system}.default = let
-      python = pkgs.nur.repos.graham33.home-assistant.python;
+      home-assistant = pkgs.nur.repos.graham33.home-assistant;
+      python = home-assistant.python;
       pythonPackages = python.pkgs;
       smartbox = pythonPackages.smartbox.overridePythonAttrs (o: {
         propagatedBuildInputs = (o.propagatedBuildInputs or []) ++ (with pythonPackages; [
