@@ -22,8 +22,9 @@
   in {
     devShells.${system}.default = let
       python = pkgs.nur.repos.graham33.home-assistant.python;
-      smartbox = python.pkgs.smartbox.overridePythonAttrs (o: {
-        propagatedBuildInputs = (o.propagatedBuildInputs or []) ++ (with python.pkgs; [
+      pythonPackages = python.pkgs;
+      smartbox = pythonPackages.smartbox.overridePythonAttrs (o: {
+        propagatedBuildInputs = (o.propagatedBuildInputs or []) ++ (with pythonPackages; [
         ]);
       });
     in pkgs.mkShell {
@@ -34,7 +35,7 @@
         black
         mypy
         py-spy
-        python3Packages.tox
+        pythonPackages.tox
         ruff
       ];
       # Work around version check warning
