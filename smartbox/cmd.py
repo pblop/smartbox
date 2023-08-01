@@ -69,6 +69,8 @@ def status(ctx):
 
         for node in nodes:
             print(f"{node['name']} (addr: {node['addr']})")
+            if node['type'] == "pmo":
+                continue
             status = session.get_status(device["dev_id"], node)
             _pretty_print(status)
 
