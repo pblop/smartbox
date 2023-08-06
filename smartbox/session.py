@@ -151,9 +151,12 @@ class Session(object):
         return response["nodes"]
 
     def get_status(self, device_id: str, node: Dict[str, Any]) -> Dict[str, str]:
-        return self._api_request(
-            f"devs/{device_id}/{node['type']}/{node['addr']}/status"
-        )
+        try:
+            return self._api_request(
+                f"devs/{device_id}/{node['type']}/{node['addr']}/status"
+            )
+        except:
+            return {}
 
     def set_status(
         self,
